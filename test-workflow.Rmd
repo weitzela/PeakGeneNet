@@ -1,0 +1,21 @@
+---
+title: "test workflow"
+author: "Anne Marie Weitzel"
+date: "2026-01-12"
+output: html_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(devtools)
+library(roxygen2)
+library(tidyverse)
+```
+
+```{r}
+load_all()
+```
+
