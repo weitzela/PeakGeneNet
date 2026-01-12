@@ -1,0 +1,21 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://weitzela.github.io/PeakGeneNet/404.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/LICENSE-text.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/authors.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/index.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/adjustCounts.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/adjustCountsMultipleContrasts.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/adjustCovariateMatrix.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/assignRegion2GeneDirection.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/calculateDirectedDistance.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/categorizeAndAnnotateCorrelationResults.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/corWithDistalPeak.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/corWithDistalPeak_wrapper.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/correlateByChromosome.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/createTSSObject.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/editCorResFields.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/index.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/matrixCorrelation.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/removeBatchEffect_wrapper.html</loc></url>
+</urlset>
+
