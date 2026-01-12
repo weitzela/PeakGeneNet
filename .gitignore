@@ -4,3 +4,7 @@
 *.RData
 *.Rprofile
 .Rproj.user
+.Rhistory
+.RData
+.httr-oauth
+.quarto
