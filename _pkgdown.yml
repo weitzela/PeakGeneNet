@@ -1,0 +1,13 @@
+url: https://weitzela.github.io/PeakGeneNet/
+
+development:
+  mode: auto
+
+template:
+  bootstrap: 5
+  package: tidytemplate
+
+navbar:
+  structure:
+    left: [setup, reference]
+    right: [search, github]
