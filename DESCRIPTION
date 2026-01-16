@@ -18,10 +18,22 @@ LazyData: true
 RoxygenNote: 7.3.3
 Imports: 
     tictoc,
+    Seqinfo,
+    GenomeInfoDb,
+    biomaRt,
     knitr,
     limma,
     matrixStats,
     GenomicRanges,
     GenomicFeatures,
-    tidyverse
+    plyranges,
+    gtools,
+    dplyr,
+    tidyr,
+    purrr,
+    rlang,
+    stringr,
+    magrittr
 URL: https://weitzela.github.io/PeakGeneNet/
+Depends: 
+    R (>= 3.5)
