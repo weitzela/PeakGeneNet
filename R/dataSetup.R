@@ -70,6 +70,7 @@ createPeakGr = function(peak_counts, ucsc_genome) {
 }
 
 #' Set up genomicranges objects for the data included in the correlation analysis
+#' @export
 #' @examples
 #' # createPeak2GeneObjects(gene_counts, peak_counts, biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109), "rn7")
 #' 
