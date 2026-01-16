@@ -5,7 +5,7 @@ development:
 
 template:
   bootstrap: 5
-  # package: tidytemplate
+  bootswatch: simplex
 
 navbar:
   structure:
