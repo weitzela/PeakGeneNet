@@ -1,0 +1,26 @@
+#' Example Gene Counts
+#' 
+#' A matrix containing example gene count data. This is pulled from a larger dataset and was VST transformed.
+#' 
+#' @format A matrix with 3 rows and 128 columns
+#' \describe{
+#'    \item{Rows}{Genes}
+#'    \item{Columns}{Samples}
+#' }
+#' 
+#' @source University of Michigan
+"gene_counts"
+
+#' Example Peak Counts
+#' 
+#' A list of matrices containing VST transformed counts for multiple modalities to be integrated. The matrices include features (peaks) as rows and samples as columns. Each matrix contains a "sample_info" attribute that is a dataframe which provides metadata information to be used for data normalization. The rownames should be identical to the column names for the respective matrix. The dataframe should only include numeric and factor data.
+#' 
+#' @format A list of matrices 
+#' \describe{
+#'    \item{H3K27ac}{A matrix of H3K27ac count data with 124 rows and 59 columns} 
+#'    \item{H3K4me1}{A matrix of H3K4me1 count data with 302 rows and 59 columns}
+#'    \item{H3K4me3}{A matrix of H3K4me3 count data with 5 rows and 59 columns}
+#'    \item{ATACSeq}{A matrix of ATACSeq count data with 296 rows and 123 columns}
+#' }
+#' @source University of Michigan
+"peak_counts"
