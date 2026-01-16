@@ -51,10 +51,17 @@ library(PeakGeneNet)
 - [`correlateByChromosome()`](https://weitzela.github.io/PeakGeneNet/reference/correlateByChromosome.md)
   : A wrapper function to carry out correlations in smaller chunks to
   help save on memory
+- [`createPeak2GeneObjects()`](https://weitzela.github.io/PeakGeneNet/reference/createPeak2GeneObjects.md)
+  : Set up genomicranges objects for the data included in the
+  correlation analysis
 - [`editCorResFields()`](https://weitzela.github.io/PeakGeneNet/reference/editCorResFields.md)
   : Annotation of significant promoter peak information
+- [`gene_counts`](https://weitzela.github.io/PeakGeneNet/reference/gene_counts.md)
+  : Example Gene Counts
 - [`matrixCorrelation()`](https://weitzela.github.io/PeakGeneNet/reference/matrixCorrelation.md)
   : Correlation of two matrices for more efficient calculations
+- [`peak_counts`](https://weitzela.github.io/PeakGeneNet/reference/peak_counts.md)
+  : Example Peak Counts
 - [`removeBatchEffect_wrapper()`](https://weitzela.github.io/PeakGeneNet/reference/removeBatchEffect_wrapper.md)
   : Wrapper: Remove Batch Effect This supplies the experimental model to
   remove technical variables, while protecting for the experimental
