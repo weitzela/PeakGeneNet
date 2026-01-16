@@ -69,19 +69,7 @@
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> <span style="color: #0000BB;">dplyr</span>::<span style="color: #00BB00;">filter()</span> masks <span style="color: #0000BB;">stats</span>::filter()</span></span>
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> <span style="color: #0000BB;">dplyr</span>::<span style="color: #00BB00;">lag()</span>    masks <span style="color: #0000BB;">stats</span>::lag()</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use the conflicted package (<span style="color: #0000BB; font-style: italic;">&lt;http://conflicted.r-lib.org/&gt;</span>) to force all conflicts to become errors</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://weitzela.github.io/PeakGeneNet/">PeakGeneNet</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: replacing previous import 'dplyr::between' by 'plyranges::between'</span></span>
-<span><span class="co">#&gt; when loading 'PeakGeneNet'</span></span>
-<span><span class="co">#&gt; Warning: replacing previous import 'dplyr::n_distinct' by</span></span>
-<span><span class="co">#&gt; 'plyranges::n_distinct' when loading 'PeakGeneNet'</span></span>
-<span><span class="co">#&gt; Warning: replacing previous import 'dplyr::n' by 'plyranges::n' when loading</span></span>
-<span><span class="co">#&gt; 'PeakGeneNet'</span></span>
-<span><span class="co">#&gt; Warning: replacing previous import 'plyranges::between' by 'dplyr::between'</span></span>
-<span><span class="co">#&gt; when loading 'PeakGeneNet'</span></span>
-<span><span class="co">#&gt; Warning: replacing previous import 'plyranges::n' by 'dplyr::n' when loading</span></span>
-<span><span class="co">#&gt; 'PeakGeneNet'</span></span>
-<span><span class="co">#&gt; Warning: replacing previous import 'plyranges::n_distinct' by</span></span>
-<span><span class="co">#&gt; 'dplyr::n_distinct' when loading 'PeakGeneNet'</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://weitzela.github.io/PeakGeneNet/">PeakGeneNet</a></span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p2g_ls</span> <span class="op">=</span> <span class="fu"><a href="../reference/createPeak2GeneObjects.html">createPeak2GeneObjects</a></span><span class="op">(</span><span class="va">gene_counts</span>, <span class="va">peak_counts</span>, <span class="fu">biomaRt</span><span class="fu">::</span><span class="fu"><a href="https://huber-group-embl.github.io/biomaRt/reference/useEnsembl.html" class="external-link">useEnsembl</a></span><span class="op">(</span>biomart <span class="op">=</span> <span class="st">"genes"</span>, dataset <span class="op">=</span> <span class="st">"rnorvegicus_gene_ensembl"</span>, version <span class="op">=</span> <span class="fl">109</span><span class="op">)</span>, <span class="st">"rn7"</span><span class="op">)</span></span></code></pre></div>
   </main>

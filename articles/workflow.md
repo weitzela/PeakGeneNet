@@ -13,18 +13,6 @@ library(tidyverse)
 #> ✖ dplyr::lag()    masks stats::lag()
 #> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 library(PeakGeneNet)
-#> Warning: replacing previous import 'dplyr::between' by 'plyranges::between'
-#> when loading 'PeakGeneNet'
-#> Warning: replacing previous import 'dplyr::n_distinct' by
-#> 'plyranges::n_distinct' when loading 'PeakGeneNet'
-#> Warning: replacing previous import 'dplyr::n' by 'plyranges::n' when loading
-#> 'PeakGeneNet'
-#> Warning: replacing previous import 'plyranges::between' by 'dplyr::between'
-#> when loading 'PeakGeneNet'
-#> Warning: replacing previous import 'plyranges::n' by 'dplyr::n' when loading
-#> 'PeakGeneNet'
-#> Warning: replacing previous import 'plyranges::n_distinct' by
-#> 'dplyr::n_distinct' when loading 'PeakGeneNet'
 ```
 
 ``` r
