@@ -39,6 +39,7 @@ Depends:
     R (>= 3.5)
 Suggests: 
     rmarkdown,
-    knitr
+    knitr,
+    kable
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
