@@ -1,8 +1,7 @@
 ---
 title: "workflow"
 output: 
-  rmarkdown::html_vignette:
-    df_print: kable
+  rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{workflow}
   %\VignetteEngine{knitr::rmarkdown}
