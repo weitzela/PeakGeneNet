@@ -199,113 +199,20 @@ FALSE
 </tbody>
 </table>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p2g_ls</span><span class="op">$</span><span class="va">all_pairs</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="op">]</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr>
-<th style="text-align:left;">
-ensembl_gene_id
-</th>
-<th style="text-align:left;">
-regulatory_element
-</th>
-<th style="text-align:left;">
-target_id
-</th>
-<th style="text-align:left;">
-link_label
-</th>
-<th style="text-align:left;">
-chr
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78634005:78634640_ATACSeq
-</td>
-<td style="text-align:left;">
-chr3:79610922:79613046_H3K4me3
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78652401:78653178_H3K4me1
-</td>
-<td style="text-align:left;">
-chr3:79610922:79613046_H3K4me3
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78652614:78653063_ATACSeq
-</td>
-<td style="text-align:left;">
-chr3:79610922:79613046_H3K4me3
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78683169:78683832_H3K27ac
-</td>
-<td style="text-align:left;">
-chr3:79610922:79613046_H3K4me3
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78683236:78683697_H3K4me1
-</td>
-<td style="text-align:left;">
-chr3:79610922:79613046_H3K4me3
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-</tr>
-</tbody>
-</table></main>
+<code class="sourceCode R"><span><span class="va">p2g_ls</span><span class="op">$</span><span class="va">all_pairs</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="op">]</span> <span class="co">#|&gt; kableExtra::kable()</span></span>
+<span><span class="co">#&gt;      ensembl_gene_id             regulatory_element</span></span>
+<span><span class="co">#&gt; 1 ENSRNOG00000000008 chr3:78634005:78634640_ATACSeq</span></span>
+<span><span class="co">#&gt; 2 ENSRNOG00000000008 chr3:78652401:78653178_H3K4me1</span></span>
+<span><span class="co">#&gt; 3 ENSRNOG00000000008 chr3:78652614:78653063_ATACSeq</span></span>
+<span><span class="co">#&gt; 4 ENSRNOG00000000008 chr3:78683169:78683832_H3K27ac</span></span>
+<span><span class="co">#&gt; 5 ENSRNOG00000000008 chr3:78683236:78683697_H3K4me1</span></span>
+<span><span class="co">#&gt;                        target_id                   link_label  chr</span></span>
+<span><span class="co">#&gt; 1 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 2 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 3 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 4 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 5 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span></code></pre></div>
+  </main>
 </div>
 
 
