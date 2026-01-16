@@ -2,12 +2,14 @@
 % Please edit documentation in R/dataSetup.R
 \name{createPeak2GeneObjects}
 \alias{createPeak2GeneObjects}
-\title{Set up genomicranges objects for the data included in the correlation analysis}
+\title{Create Peak-Gene Links
+Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have \emph{unique} feature IDs.}
 \usage{
 createPeak2GeneObjects(gene_counts, peak_counts, biomart_ensembl, ucsc_genome)
 }
 \description{
-Set up genomicranges objects for the data included in the correlation analysis
+Create Peak-Gene Links
+Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have \emph{unique} feature IDs.
 }
 \examples{
 # createPeak2GeneObjects(gene_counts, peak_counts, biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109), "rn7")

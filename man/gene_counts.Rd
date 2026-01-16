@@ -7,8 +7,8 @@
 \format{
 A matrix with 3 rows and 128 columns
 \describe{
-   \item{Rows}{Genes}
-   \item{Columns}{Samples}
+\item{Rows}{Genes}
+\item{Columns}{Samples}
 }
 }
 \source{

@@ -9,5 +9,5 @@ template:
 
 navbar:
   structure:
-    left: [setup, reference]
+    left: [setup, reference, articles]
     right: [search, github]
