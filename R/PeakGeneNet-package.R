@@ -5,7 +5,6 @@
 #' @import tidyr
 #' @import stringr
 #' @import dplyr
-#' @importFrom dplyr between n_distinct n
-#' @import plyranges
+#' @importFrom plyranges bind_ranges join_overlap_inner stretch remove_names
 NULL
 #> NULL
