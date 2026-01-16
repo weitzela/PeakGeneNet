@@ -40,6 +40,6 @@ Depends:
 Suggests: 
     rmarkdown,
     knitr,
-    kable
+    kableExtra
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
