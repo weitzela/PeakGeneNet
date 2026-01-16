@@ -30,6 +30,12 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/workflow.html">workflow</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -59,19 +65,40 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Attaching core tidyverse packages</span> ──────────────────────── tidyverse 2.0.0 ──</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">dplyr    </span> 1.1.4     <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">readr    </span> 2.1.6</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">forcats  </span> 1.0.1     <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">stringr  </span> 1.6.0</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">ggplot2  </span> 4.0.1     <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">tibble   </span> 3.3.1</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">lubridate</span> 1.9.4     <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">tidyr    </span> 1.3.2</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> <span style="color: #0000BB;">purrr    </span> 1.2.1     </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Conflicts</span> ────────────────────────────────────────── tidyverse_conflicts() ──</span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> <span style="color: #0000BB;">dplyr</span>::<span style="color: #00BB00;">filter()</span> masks <span style="color: #0000BB;">stats</span>::filter()</span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> <span style="color: #0000BB;">dplyr</span>::<span style="color: #00BB00;">lag()</span>    masks <span style="color: #0000BB;">stats</span>::lag()</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use the conflicted package (<span style="color: #0000BB; font-style: italic;">&lt;http://conflicted.r-lib.org/&gt;</span>) to force all conflicts to become errors</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://weitzela.github.io/PeakGeneNet/">PeakGeneNet</a></span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p2g_ls</span> <span class="op">=</span> <span class="fu"><a href="../reference/createPeak2GeneObjects.html">createPeak2GeneObjects</a></span><span class="op">(</span><span class="va">gene_counts</span>, <span class="va">peak_counts</span>, <span class="fu">biomaRt</span><span class="fu">::</span><span class="fu"><a href="https://huber-group-embl.github.io/biomaRt/reference/useEnsembl.html" class="external-link">useEnsembl</a></span><span class="op">(</span>biomart <span class="op">=</span> <span class="st">"genes"</span>, dataset <span class="op">=</span> <span class="st">"rnorvegicus_gene_ensembl"</span>, version <span class="op">=</span> <span class="fl">109</span><span class="op">)</span>, <span class="st">"rn7"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">p2g_ls</span> <span class="op">=</span> <span class="fu"><a href="../reference/createPeak2GeneObjects.html">createPeak2GeneObjects</a></span><span class="op">(</span></span>
+<span>  <span class="va">gene_counts</span>, <span class="va">peak_counts</span>, </span>
+<span>  <span class="fu">biomaRt</span><span class="fu">::</span><span class="fu"><a href="https://huber-group-embl.github.io/biomaRt/reference/useEnsembl.html" class="external-link">useEnsembl</a></span><span class="op">(</span>biomart <span class="op">=</span> <span class="st">"genes"</span>, </span>
+<span>                      dataset <span class="op">=</span> <span class="st">"rnorvegicus_gene_ensembl"</span>, version <span class="op">=</span> <span class="fl">109</span><span class="op">)</span>, </span>
+<span>  <span class="st">"rn7"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">p2g_ls</span><span class="op">$</span><span class="va">paired_df</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="op">]</span></span>
+<span><span class="co">#&gt;                        unique_id              region_id modality</span></span>
+<span><span class="co">#&gt; 1 chr3:78634005:78634640_ATACSeq chr3:78634005:78634640  ATACSeq</span></span>
+<span><span class="co">#&gt; 2 chr3:78652401:78653178_H3K4me1 chr3:78652401:78653178  H3K4me1</span></span>
+<span><span class="co">#&gt; 3 chr3:78652614:78653063_ATACSeq chr3:78652614:78653063  ATACSeq</span></span>
+<span><span class="co">#&gt; 4 chr3:78683169:78683832_H3K27ac chr3:78683169:78683832  H3K27ac</span></span>
+<span><span class="co">#&gt; 5 chr3:78683236:78683697_H3K4me1 chr3:78683236:78683697  H3K4me1</span></span>
+<span><span class="co">#&gt;      ensembl_gene_id dist_to_tss promoter_peak</span></span>
+<span><span class="co">#&gt; 1 ENSRNOG00000000008     -977078         FALSE</span></span>
+<span><span class="co">#&gt; 2 ENSRNOG00000000008     -958540         FALSE</span></span>
+<span><span class="co">#&gt; 3 ENSRNOG00000000008     -958655         FALSE</span></span>
+<span><span class="co">#&gt; 4 ENSRNOG00000000008     -927886         FALSE</span></span>
+<span><span class="co">#&gt; 5 ENSRNOG00000000008     -928021         FALSE</span></span>
+<span><span class="va">p2g_ls</span><span class="op">$</span><span class="va">all_pairs</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="op">]</span></span>
+<span><span class="co">#&gt;      ensembl_gene_id             regulatory_element</span></span>
+<span><span class="co">#&gt; 1 ENSRNOG00000000008 chr3:78634005:78634640_ATACSeq</span></span>
+<span><span class="co">#&gt; 2 ENSRNOG00000000008 chr3:78652401:78653178_H3K4me1</span></span>
+<span><span class="co">#&gt; 3 ENSRNOG00000000008 chr3:78652614:78653063_ATACSeq</span></span>
+<span><span class="co">#&gt; 4 ENSRNOG00000000008 chr3:78683169:78683832_H3K27ac</span></span>
+<span><span class="co">#&gt; 5 ENSRNOG00000000008 chr3:78683236:78683697_H3K4me1</span></span>
+<span><span class="co">#&gt;                        target_id                   link_label  chr</span></span>
+<span><span class="co">#&gt; 1 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 2 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 3 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 4 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span>
+<span><span class="co">#&gt; 5 chr3:79610922:79613046_H3K4me3 distal_peak_to_promoter_peak chr3</span></span></code></pre></div>
   </main>
 </div>
 

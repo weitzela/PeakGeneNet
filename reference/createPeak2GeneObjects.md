@@ -1,7 +1,8 @@
-# Set up genomicranges objects for the data included in the correlation analysis
+# Create Peak-Gene Links Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have *unique* feature IDs.
 
-Set up genomicranges objects for the data included in the correlation
-analysis
+Create Peak-Gene Links Set up genomicranges objects for the data
+included in the correlation analysis. Data matrices must have *unique*
+feature IDs.
 
 ## Usage
 
