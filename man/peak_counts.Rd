@@ -5,12 +5,12 @@
 \alias{peak_counts}
 \title{Example Peak Counts}
 \format{
-A list of matrices 
+A list of matrices
 \describe{
-   \item{H3K27ac}{A matrix of H3K27ac count data with 124 rows and 59 columns} 
-   \item{H3K4me1}{A matrix of H3K4me1 count data with 302 rows and 59 columns}
-   \item{H3K4me3}{A matrix of H3K4me3 count data with 5 rows and 59 columns}
-   \item{ATACSeq}{A matrix of ATACSeq count data with 296 rows and 123 columns}
+\item{H3K27ac}{A matrix of H3K27ac count data with 124 rows and 59 columns}
+\item{H3K4me1}{A matrix of H3K4me1 count data with 302 rows and 59 columns}
+\item{H3K4me3}{A matrix of H3K4me3 count data with 5 rows and 59 columns}
+\item{ATACSeq}{A matrix of ATACSeq count data with 296 rows and 123 columns}
 }
 }
 \source{
