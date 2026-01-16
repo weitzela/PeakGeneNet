@@ -1,6 +1,8 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://weitzela.github.io/PeakGeneNet/404.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/LICENSE-text.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/articles/index.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/articles/workflow.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/authors.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/index.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/adjustCounts.html</loc></url>

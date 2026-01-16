@@ -67,3 +67,8 @@ library(PeakGeneNet)
   remove technical variables, while protecting for the experimental
   variables.
 
+# Articles
+
+### All vignettes
+
+- [workflow](https://weitzela.github.io/PeakGeneNet/articles/workflow.md):
