@@ -22,7 +22,6 @@ calculateDirectedDistance = function(subject, target) {
 #' # createTSSObject(c("ENSR00129", "ENSR00139"), biomaRt::useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl", version = 105), "hg38")
 #' @keywords internal
 createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome) {
-  # ensembl = biomaRt::useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl", version = 105)
   gene_gr = biomaRt::getBM(attributes = c("transcription_start_site", "transcript_is_canonical", "ensembl_gene_id", "chromosome_name", "strand"), filters = "ensembl_gene_id", values = ensembl_ids, mart = biomart_ensembl) |> 
     dplyr::rename("start" = "transcription_start_site", "chr" = "chromosome_name") |> 
     dplyr::mutate(end = start) |> 
@@ -39,10 +38,10 @@ createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome) {
   Seqinfo::seqinfo(gene_gr) = Seqinfo::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(gene_gr)) |> unique(),]
   
   promoter_gr = gene_gr |> 
-    IRanges::promoters(upstream = 2000, downstream = 1000) |> 
-    dplyr::mutate(annotation = "Promoter")
+    IRanges::promoters(upstream = 2000, downstream = 1000)
+  promoter_gr$annotation = "Promoter"
   
-  gene_gr = plyranges::bind_ranges(gene_gr, promoter_gr) |> 
+  gene_gr = c(gene_gr, promoter_gr) |> 
     GenomicRanges::sort(ignore.strand = TRUE)
   return(gene_gr)
 }
@@ -79,29 +78,32 @@ createPeak2GeneObjects = function(gene_counts, peak_counts, biomart_ensembl, ucs
   gene_gr = createTSSGr(rownames(gene_counts), biomart_ensembl, ucsc_genome)
   peak_gr = createPeakGr(peak_counts, ucsc_genome)
   
-  promoter_peaks = peak_gr |>
-    subset(modality %in% c("H3K27ac", "H3K4me3", "ATACSeq")) |>
-    # IRanges::subsetByOverlaps(subset(gene_gr, annotation == "Promoter"))
-    plyranges::join_overlap_inner(subset(gene_gr, annotation == "Promoter"))
+  promoter_options = subset(peak_gr, modality %in% c("H3K27ac", "H3K4me3", "ATACSeq"))
+  promoter_locus = subset(gene_gr, annotation == "Promoter")
+  promoter_olaps = GenomicRanges::findOverlaps(promoter_options, promoter_locus)
+  promoter_peaks = promoter_options[promoter_olaps@from]
+  promoter_peaks$ensembl_gene_id = promoter_locus$ensembl_gene_id[promoter_olaps@to]
   
-  peak_gr = peak_gr |>
-    dplyr::mutate(promoter_peak = unique_id %in% unique(promoter_peaks$unique_id))
+  peak_gr$promoter_peak = peak_gr$unique_id %in% unique(promoter_peaks$unique_id)
 
   promoter_gr = subset(gene_gr, annotation == "Promoter") |>
     GenomicRanges::split(~ ensembl_gene_id)
   
   # the tss_locus object is the one that spans 1Mb +/- the gene TSS, its promoter regions removed from it
   tss_locus = subset(gene_gr, annotation == "TSS") |>
-    BiocGenerics::unstrand() |>
-    plyranges::stretch(2e6) |>
-    GenomicRanges::trim() # trim to length of chromosome if you have genome info set in the granges object
+    BiocGenerics::unstrand()
+  tss_locus = tss_locus + 1e6
+  tss_locus = GenomicRanges::trim(tss_locus) # trim to length of chromosome if you have genome info set in the granges object
   tss_locus = GenomicRanges::split(tss_locus, tss_locus$ensembl_gene_id)
   tss_locus = GenomicRanges::setdiff(tss_locus, promoter_gr[names(tss_locus)], ignore.strand = TRUE) |>
     unlist()
   tss_locus$ensembl_gene_id = names(tss_locus)
   names(tss_locus) = NULL
   
-  non_proximal_overlaps = plyranges::join_overlap_inner(subset(peak_gr, !promoter_peak), tss_locus)
+  distal_options = subset(peak_gr, !promoter_peak)
+  distal_olaps = GenomicRanges::findOverlaps(distal_options, tss_locus)
+  non_proximal_overlaps = distal_options[distal_olaps@from]
+  non_proximal_overlaps$ensembl_gene_id = tss_locus$ensembl_gene_id[distal_olaps@to]
   
   dist_to_tss = calculateDirectedDistance(
     non_proximal_overlaps,
@@ -109,15 +111,14 @@ createPeak2GeneObjects = function(gene_counts, peak_counts, biomart_ensembl, ucs
   )
   
   promoter_peaks_for_paired_df = promoter_peaks |>
-    plyranges::remove_names() |>
+    `names<-`(NULL) |> 
     GenomicRanges::mcols() |>
     as.data.frame() |>
     dplyr::mutate(promoter_peak = TRUE) |>
-    dplyr::select(-annotation) |>
     dplyr::mutate(dist_to_tss = calculateDirectedDistance(peak_gr[unique_id], subset(gene_gr, annotation == "TSS")[ensembl_gene_id]))
   
   paired_df = non_proximal_overlaps |>
-    plyranges::remove_names() |>
+    `names<-`(NULL) |> 
     GenomicRanges::mcols() |>
     as.data.frame() |>
     dplyr::select(unique_id, region_id, modality, ensembl_gene_id) |>
