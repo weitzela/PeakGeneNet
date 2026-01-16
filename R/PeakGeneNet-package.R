@@ -5,5 +5,7 @@
 #' @import tidyr
 #' @import stringr
 #' @import dplyr
+#' @importFrom dplyr between n_distinct n
+#' @import plyranges
 NULL
 #> NULL
