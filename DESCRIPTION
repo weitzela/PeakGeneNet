@@ -26,7 +26,6 @@ Imports:
     matrixStats,
     GenomicRanges,
     GenomicFeatures,
-    plyranges,
     gtools,
     dplyr,
     tidyr,
