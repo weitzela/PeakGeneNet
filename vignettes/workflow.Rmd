@@ -30,5 +30,5 @@ p2g_ls = createPeak2GeneObjects(
   "rn7"
 )
 p2g_ls$paired_df[1:5,] |> kableExtra::kable()
-p2g_ls$all_pairs[1:5,] |> kableExtra::kable()
+p2g_ls$all_pairs[1:5,] #|> kableExtra::kable()
 ```
