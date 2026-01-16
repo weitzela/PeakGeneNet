@@ -38,6 +38,7 @@ URL: https://weitzela.github.io/PeakGeneNet/
 Depends: 
     R (>= 3.5)
 Suggests: 
-    rmarkdown
+    rmarkdown,
+    knitr
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
