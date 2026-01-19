@@ -6,7 +6,7 @@ downstream information for interpreting linked networks
 ## Usage
 
 ``` r
-categorizeAndAnnotateCorrelationResults(.sig_cor_genes, paired_df)
+categorizeAndAnnotateCorrelationResults(.sig_cor_genes, p2g_info)
 ```
 
 ## Arguments
@@ -15,7 +15,7 @@ categorizeAndAnnotateCorrelationResults(.sig_cor_genes, paired_df)
 
   dataframe that includes genes with significant correlations
 
-- paired_df:
+- p2g_info:
 
   dataframe
 
