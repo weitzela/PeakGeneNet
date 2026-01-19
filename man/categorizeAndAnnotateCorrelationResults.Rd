@@ -4,12 +4,12 @@
 \alias{categorizeAndAnnotateCorrelationResults}
 \title{Annotation of genes that are significant and provide some additional downstream information for interpreting linked networks}
 \usage{
-categorizeAndAnnotateCorrelationResults(.sig_cor_genes, paired_df)
+categorizeAndAnnotateCorrelationResults(.sig_cor_genes, p2g_info)
 }
 \arguments{
 \item{.sig_cor_genes}{dataframe that includes genes with significant correlations}
 
-\item{paired_df}{dataframe}
+\item{p2g_info}{dataframe}
 }
 \value{
 an annotated dataframe

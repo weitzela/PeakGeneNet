@@ -18,10 +18,27 @@ options(knitr.table.format = "html")
 ```
 
 ```{r setup, message=FALSE}
+# install.packages("pak")
+# pak::pak("weitzela/PeakGeneNet")
+
 library(tidyverse)
 library(PeakGeneNet)
 ```
 
+# 1. Data Preparation  
+Required objects:
+
+* Gene counts: this is a matrix where the row names should be ensembl IDs  
+```{r, include=FALSE}
+gene_counts[1:3,1:3] |> kableExtra::kable()
+```
+
+* Peak counts: a list object with one or more matrices. Matrices should be in same format as gene counts, with row names as genomic region where the chromosome names, start, and end locations are separaated by a punctuation mark (e.g., chr1:123:456 or chr1:123-456). 
+```{r, include=FALSE}
+peak_counts$ATACSeq[c(200:202, 1:3),1:3] |> kableExtra::kable()
+```
+
+Use these objects to create peak-gene pairs for inclusion in the correlation analysis. The `p2g_info` provides information for individual peaks per gene they will be correlated with. The `correlation_pairs` object is used for reference for all of the correlations that will be run.
 ```{r}
 p2g_ls = createPeak2GeneObjects(
   gene_counts, peak_counts, 
@@ -29,6 +46,11 @@ p2g_ls = createPeak2GeneObjects(
                       dataset = "rnorvegicus_gene_ensembl", version = 109), 
   "rn7"
 )
-p2g_ls$paired_df[1:5,] |> kableExtra::kable()
-p2g_ls$all_pairs[1:5,] #|> kableExtra::kable()
+p2g_ls$p2g_info[1:5,] |> kableExtra::kable()
+p2g_ls$correlation_pairs[1:5,] |> kableExtra::kable()
 ```
+
+```{r}
+sessionInfo()
+```
+
