@@ -17,10 +17,12 @@
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/createPeak2GeneObjects.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/createTSSGr.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/editCorResFields.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/formatMatrixForCorrelation.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/gene_counts.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/index.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/matrixCorrelation.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/peak_counts.html</loc></url>
+<url><loc>https://weitzela.github.io/PeakGeneNet/reference/processCorrelations.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/removeBatchEffect_wrapper.html</loc></url>
 </urlset>
 

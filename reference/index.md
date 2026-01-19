@@ -46,6 +46,9 @@
 - [`editCorResFields()`](https://weitzela.github.io/PeakGeneNet/reference/editCorResFields.md)
   : Annotation of significant promoter peak information
 
+- [`formatMatrixForCorrelation()`](https://weitzela.github.io/PeakGeneNet/reference/formatMatrixForCorrelation.md)
+  : Format input
+
 - [`gene_counts`](https://weitzela.github.io/PeakGeneNet/reference/gene_counts.md)
   : Example Gene Counts
 
@@ -54,6 +57,9 @@
 
 - [`peak_counts`](https://weitzela.github.io/PeakGeneNet/reference/peak_counts.md)
   : Example Peak Counts
+
+- [`processCorrelations()`](https://weitzela.github.io/PeakGeneNet/reference/processCorrelations.md)
+  : Process correlation results
 
 - [`removeBatchEffect_wrapper()`](https://weitzela.github.io/PeakGeneNet/reference/removeBatchEffect_wrapper.md)
   : Wrapper: Remove Batch Effect This supplies the experimental model to

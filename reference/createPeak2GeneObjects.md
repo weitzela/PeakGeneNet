@@ -7,11 +7,20 @@ feature IDs.
 ## Usage
 
 ``` r
-createPeak2GeneObjects(gene_counts, peak_counts, biomart_ensembl, ucsc_genome)
+createPeak2GeneObjects(genes, peaks, biomart_ensembl, ucsc_genome)
 ```
+
+## Arguments
+
+- genes:
+
+  either a character vector of ensembl IDs or a matrix with the row or
+  column names as the ensembl IDs
+
+- peaks:
+
+  a named list of character vectors containing renomic region. Genomic
+  regions should begin with "chr". The list can also contain count
+  matrices, where row names or column names are genomic regions.
 
 ## Examples
-
-``` r
-# createPeak2GeneObjects(gene_counts, peak_counts, biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109), "rn7")
-```

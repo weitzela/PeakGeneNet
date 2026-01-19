@@ -44,15 +44,25 @@ Set up genomicranges objects for the data included in the correlation analysis. 
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createPeak2GeneObjects</span><span class="op">(</span><span class="va">gene_counts</span>, <span class="va">peak_counts</span>, <span class="va">biomart_ensembl</span>, <span class="va">ucsc_genome</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createPeak2GeneObjects</span><span class="op">(</span><span class="va">genes</span>, <span class="va">peaks</span>, <span class="va">biomart_ensembl</span>, <span class="va">ucsc_genome</span><span class="op">)</span></span></code></pre></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
+
+
+<dl><dt id="arg-genes">genes<a class="anchor" aria-label="anchor" href="#arg-genes"></a></dt>
+<dd><p>either a character vector of ensembl IDs or a matrix with the row or column names as the ensembl IDs</p></dd>
+
+
+<dt id="arg-peaks">peaks<a class="anchor" aria-label="anchor" href="#arg-peaks"></a></dt>
+<dd><p>a named list of character vectors containing renomic region. Genomic regions should begin with "chr". The list can also contain count matrices, where row names or column names are genomic regions.</p></dd>
+
+</dl></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># createPeak2GeneObjects(gene_counts, peak_counts, biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109), "rn7")</span></span></span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
+
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

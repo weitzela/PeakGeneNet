@@ -74,13 +74,173 @@
 </h2>
 <p>Required objects:</p>
 <ul>
-<li><p>Gene counts: this is a matrix where the row names should be
-ensembl IDs</p></li>
-<li><p>Peak counts: a list object with one or more matrices. Matrices
+<li>Gene counts: this is a matrix where the row names should be ensembl
+IDs<br><table class="table">
+<thead><tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+R18804
+</th>
+<th style="text-align:right;">
+R18805
+</th>
+<th style="text-align:right;">
+R18809
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:right;">
+6.226779
+</td>
+<td style="text-align:right;">
+6.150745
+</td>
+<td style="text-align:right;">
+6.388451
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000082
+</td>
+<td style="text-align:right;">
+7.267295
+</td>
+<td style="text-align:right;">
+7.324605
+</td>
+<td style="text-align:right;">
+7.220238
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000001489
+</td>
+<td style="text-align:right;">
+7.768652
+</td>
+<td style="text-align:right;">
+8.032395
+</td>
+<td style="text-align:right;">
+7.814327
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>Peak counts: a list object with one or more matrices. Matrices
 should be in same format as gene counts, with row names as genomic
 region where the chromosome names, start, and end locations are
-separaated by a punctuation mark (e.g., chr1:123:456 or
-chr1:123-456).</p></li>
+separaated by a punctuation mark (e.g., chr1:123:456 or chr1:123-456).
+<table class="table">
+<thead><tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+PL119617
+</th>
+<th style="text-align:right;">
+PL119618
+</th>
+<th style="text-align:right;">
+PL119619
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+chr2:103325658:103326019
+</td>
+<td style="text-align:right;">
+6.616630
+</td>
+<td style="text-align:right;">
+6.816892
+</td>
+<td style="text-align:right;">
+6.210107
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chr2:103337000:103337431
+</td>
+<td style="text-align:right;">
+7.643895
+</td>
+<td style="text-align:right;">
+7.417112
+</td>
+<td style="text-align:right;">
+7.204352
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chr2:103483778:103484423
+</td>
+<td style="text-align:right;">
+7.449124
+</td>
+<td style="text-align:right;">
+7.336309
+</td>
+<td style="text-align:right;">
+7.031643
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chr3:78634005:78634640
+</td>
+<td style="text-align:right;">
+6.754136
+</td>
+<td style="text-align:right;">
+6.966854
+</td>
+<td style="text-align:right;">
+7.031643
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chr3:78652614:78653063
+</td>
+<td style="text-align:right;">
+6.707064
+</td>
+<td style="text-align:right;">
+6.966854
+</td>
+<td style="text-align:right;">
+6.674483
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chr3:78702369:78702924
+</td>
+<td style="text-align:right;">
+6.890375
+</td>
+<td style="text-align:right;">
+7.033393
+</td>
+<td style="text-align:right;">
+7.272677
+</td>
+</tr>
+</tbody>
+</table>
+</li>
 </ul>
 <p>Use these objects to create peak-gene pairs for inclusion in the
 correlation analysis. The <code>p2g_info</code> provides information for
@@ -89,7 +249,7 @@ individual peaks per gene they will be correlated with. The
 the correlations that will be run.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p2g_ls</span> <span class="op">=</span> <span class="fu"><a href="../reference/createPeak2GeneObjects.html">createPeak2GeneObjects</a></span><span class="op">(</span></span>
-<span>  <span class="va">gene_counts</span>, <span class="va">peak_counts</span>, </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">gene_counts</span><span class="op">)</span>, <span class="va">peak_counts</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">rownames</span><span class="op">)</span>, </span>
 <span>  <span class="fu">biomaRt</span><span class="fu">::</span><span class="fu"><a href="https://huber-group-embl.github.io/biomaRt/reference/useEnsembl.html" class="external-link">useEnsembl</a></span><span class="op">(</span>biomart <span class="op">=</span> <span class="st">"genes"</span>, </span>
 <span>                      dataset <span class="op">=</span> <span class="st">"rnorvegicus_gene_ensembl"</span>, version <span class="op">=</span> <span class="fl">109</span><span class="op">)</span>, </span>
 <span>  <span class="st">"rn7"</span></span>
@@ -238,6 +398,9 @@ link_label
 <th style="text-align:left;">
 chr
 </th>
+<th style="text-align:left;">
+modality_pair
+</th>
 </tr></thead>
 <tbody>
 <tr>
@@ -256,6 +419,9 @@ distal_peak_to_promoter_peak
 <td style="text-align:left;">
 chr3
 </td>
+<td style="text-align:left;">
+ATACSeq-H3K4me3
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -272,6 +438,9 @@ distal_peak_to_promoter_peak
 </td>
 <td style="text-align:left;">
 chr3
+</td>
+<td style="text-align:left;">
+H3K4me1-H3K4me3
 </td>
 </tr>
 <tr>
@@ -290,6 +459,9 @@ distal_peak_to_promoter_peak
 <td style="text-align:left;">
 chr3
 </td>
+<td style="text-align:left;">
+ATACSeq-H3K4me3
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -306,6 +478,9 @@ distal_peak_to_promoter_peak
 </td>
 <td style="text-align:left;">
 chr3
+</td>
+<td style="text-align:left;">
+H3K27ac-H3K4me3
 </td>
 </tr>
 <tr>
@@ -324,10 +499,1085 @@ distal_peak_to_promoter_peak
 <td style="text-align:left;">
 chr3
 </td>
+<td style="text-align:left;">
+H3K4me1-H3K4me3
+</td>
 </tr>
 </tbody>
 </table>
+<p>See how many relationships will be tested within each category.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p2g_ls</span><span class="op">$</span><span class="va">correlation_pairs</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">ensembl_gene_id</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">link_label</span>, <span class="va">modality_pair</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">tally</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"No. of Correlations"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">janitor</span><span class="fu">::</span><span class="fu"><a href="https://sfirke.github.io/janitor/reference/adorn_totals.html" class="external-link">adorn_totals</a></span><span class="op">(</span>where <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"row"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/across.html" class="external-link">across</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/where.html" class="external-link">where</a></span><span class="op">(</span><span class="va">is.numeric</span><span class="op">)</span>, <span class="fu">scales</span><span class="fu">::</span><span class="va"><a href="https://scales.r-lib.org/reference/comma.html" class="external-link">comma</a></span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr>
+<th style="text-align:left;">
+link_label
+</th>
+<th style="text-align:left;">
+modality_pair
+</th>
+<th style="text-align:left;">
+No. of Correlations
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_gene
+</td>
+<td style="text-align:left;">
+ATACSeq-RNASeq
+</td>
+<td style="text-align:left;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_gene
+</td>
+<td style="text-align:left;">
+H3K27ac-RNASeq
+</td>
+<td style="text-align:left;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_gene
+</td>
+<td style="text-align:left;">
+H3K4me3-RNASeq
+</td>
+<td style="text-align:left;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_gene
+</td>
+<td style="text-align:left;">
+ATACSeq-RNASeq
+</td>
+<td style="text-align:left;">
+292
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_gene
+</td>
+<td style="text-align:left;">
+H3K27ac-RNASeq
+</td>
+<td style="text-align:left;">
+121
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_gene
+</td>
+<td style="text-align:left;">
+H3K4me1-RNASeq
+</td>
+<td style="text-align:left;">
+302
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_gene
+</td>
+<td style="text-align:left;">
+H3K4me3-RNASeq
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-ATACSeq
+</td>
+<td style="text-align:left;">
+380
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-H3K27ac
+</td>
+<td style="text-align:left;">
+410
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-H3K4me1
+</td>
+<td style="text-align:left;">
+409
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-H3K4me3
+</td>
+<td style="text-align:left;">
+381
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K27ac-H3K27ac
+</td>
+<td style="text-align:left;">
+120
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K27ac-H3K4me1
+</td>
+<td style="text-align:left;">
+282
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K27ac-H3K4me3
+</td>
+<td style="text-align:left;">
+161
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K4me1-H3K4me3
+</td>
+<td style="text-align:left;">
+409
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K4me3-H3K4me3
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-ATACSeq
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-H3K27ac
+</td>
+<td style="text-align:left;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-H3K4me3
+</td>
+<td style="text-align:left;">
+12
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K27ac-H3K27ac
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K27ac-H3K4me3
+</td>
+<td style="text-align:left;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+promoter_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+H3K4me3-H3K4me3
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total
+</td>
+<td style="text-align:left;">
+<ul><li></ul>
+</td>
+<td style="text-align:left;">
+3,318
+</td>
+</tr>
+</tbody>
+</table>
+<p>Then, carry out and process the correlations using the following
+functions. The count matrices to for used as the input for the
+correlation analysis should have samples in rows and features in
+columns.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tmp_mat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">gene_counts</span><span class="op">)</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">tmp_mat</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  TRUE FALSE</span></span>
+<span><span class="va">tmp_mat</span><span class="op">[</span>,<span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">tmp_mat</span><span class="op">)</span><span class="op">)</span>,drop<span class="op">=</span><span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="co">#&gt;        ENSRNOG00000000008</span></span>
+<span><span class="co">#&gt; R18804           6.226779</span></span>
+<span><span class="co">#&gt; R18805           6.150745</span></span>
+<span><span class="co">#&gt; R18809           6.388451</span></span>
+<span><span class="co">#&gt; R18810           6.201142</span></span>
+<span><span class="co">#&gt; R18819           6.328846</span></span>
+<span><span class="co">#&gt; R18820           6.287093</span></span>
+<span><span class="co">#&gt; R18821           5.827359</span></span>
+<span><span class="co">#&gt; R18827           6.009111</span></span>
+<span><span class="co">#&gt; R18828           6.206376</span></span>
+<span><span class="co">#&gt; R18829           6.216744</span></span>
+<span><span class="co">#&gt; R18839           6.284814</span></span>
+<span><span class="co">#&gt; R18840           6.560351</span></span>
+<span><span class="co">#&gt; R18841           6.306194</span></span>
+<span><span class="co">#&gt; R18842           6.200470</span></span>
+<span><span class="co">#&gt; R18843           6.302628</span></span>
+<span><span class="co">#&gt; R18850           6.300516</span></span>
+<span><span class="co">#&gt; R18851           6.154064</span></span>
+<span><span class="co">#&gt; R18852           6.218144</span></span>
+<span><span class="co">#&gt; R18856           6.116110</span></span>
+<span><span class="co">#&gt; R18857           6.163643</span></span>
+<span><span class="co">#&gt; R18858           6.473600</span></span>
+<span><span class="co">#&gt; R18859           6.092026</span></span>
+<span><span class="co">#&gt; R18860           6.256806</span></span>
+<span><span class="co">#&gt; R18861           6.135792</span></span>
+<span><span class="co">#&gt; R18879           6.300636</span></span>
+<span><span class="co">#&gt; R18880           6.510249</span></span>
+<span><span class="co">#&gt; R18885           6.139304</span></span>
+<span><span class="co">#&gt; R18886           6.323827</span></span>
+<span><span class="co">#&gt; R18887           6.240320</span></span>
+<span><span class="co">#&gt; R18888           5.841920</span></span>
+<span><span class="co">#&gt; R18889           6.464813</span></span>
+<span><span class="co">#&gt; R18890           5.969445</span></span>
+<span><span class="co">#&gt; R18900           6.208546</span></span>
+<span><span class="co">#&gt; R18901           6.240876</span></span>
+<span><span class="co">#&gt; R18909           6.061753</span></span>
+<span><span class="co">#&gt; R18910           6.390905</span></span>
+<span><span class="co">#&gt; R18917           6.200783</span></span>
+<span><span class="co">#&gt; R18918           6.373255</span></span>
+<span><span class="co">#&gt; R18919           6.354534</span></span>
+<span><span class="co">#&gt; R18933           6.389630</span></span>
+<span><span class="co">#&gt; R18934           6.294382</span></span>
+<span><span class="co">#&gt; R18935           6.357744</span></span>
+<span><span class="co">#&gt; R18936           6.019776</span></span>
+<span><span class="co">#&gt; R18949           5.526674</span></span>
+<span><span class="co">#&gt; R18950           6.372019</span></span>
+<span><span class="co">#&gt; R18951           6.678617</span></span>
+<span><span class="co">#&gt; R18954           6.494188</span></span>
+<span><span class="co">#&gt; R18955           6.221581</span></span>
+<span><span class="co">#&gt; R18956           6.262311</span></span>
+<span><span class="co">#&gt; R18962           6.570335</span></span>
+<span><span class="co">#&gt; R18963           6.221500</span></span>
+<span><span class="co">#&gt; R18972           6.246718</span></span>
+<span><span class="co">#&gt; R18973           6.244364</span></span>
+<span><span class="co">#&gt; R18974           6.323325</span></span>
+<span><span class="co">#&gt; R18975           6.462049</span></span>
+<span><span class="co">#&gt; R18976           6.361749</span></span>
+<span><span class="co">#&gt; R18979           6.204799</span></span>
+<span><span class="co">#&gt; R18980           6.346200</span></span>
+<span><span class="co">#&gt; R18981           6.470114</span></span>
+<span><span class="co">#&gt; R18997           6.323925</span></span>
+<span><span class="co">#&gt; R18998           6.120808</span></span>
+<span><span class="co">#&gt; R18999           6.019391</span></span>
+<span><span class="co">#&gt; R19014           6.140557</span></span>
+<span><span class="co">#&gt; R19015           6.569781</span></span>
+<span><span class="co">#&gt; R28311           6.017178</span></span>
+<span><span class="co">#&gt; R28312           6.152096</span></span>
+<span><span class="co">#&gt; R28313           6.167043</span></span>
+<span><span class="co">#&gt; R28321           6.262532</span></span>
+<span><span class="co">#&gt; R28322           6.291001</span></span>
+<span><span class="co">#&gt; R28327           6.331873</span></span>
+<span><span class="co">#&gt; R28328           6.373952</span></span>
+<span><span class="co">#&gt; R28329           6.014881</span></span>
+<span><span class="co">#&gt; R28336           6.164190</span></span>
+<span><span class="co">#&gt; R28337           6.246948</span></span>
+<span><span class="co">#&gt; R28338           5.911523</span></span>
+<span><span class="co">#&gt; R28339           6.107326</span></span>
+<span><span class="co">#&gt; R28340           5.953431</span></span>
+<span><span class="co">#&gt; R28348           6.476898</span></span>
+<span><span class="co">#&gt; R28349           6.215214</span></span>
+<span><span class="co">#&gt; R28353           6.198157</span></span>
+<span><span class="co">#&gt; R28354           6.139912</span></span>
+<span><span class="co">#&gt; R28358           6.213172</span></span>
+<span><span class="co">#&gt; R28359           6.239303</span></span>
+<span><span class="co">#&gt; R28375           6.463560</span></span>
+<span><span class="co">#&gt; R28376           6.542750</span></span>
+<span><span class="co">#&gt; R28377           6.251136</span></span>
+<span><span class="co">#&gt; R28381           6.312130</span></span>
+<span><span class="co">#&gt; R28382           5.994931</span></span>
+<span><span class="co">#&gt; R28383           5.735034</span></span>
+<span><span class="co">#&gt; R28387           6.129441</span></span>
+<span><span class="co">#&gt; R28388           6.119432</span></span>
+<span><span class="co">#&gt; R28393           6.417523</span></span>
+<span><span class="co">#&gt; R28394           6.306894</span></span>
+<span><span class="co">#&gt; R28395           6.238548</span></span>
+<span><span class="co">#&gt; R28400           6.182375</span></span>
+<span><span class="co">#&gt; R28401           6.135212</span></span>
+<span><span class="co">#&gt; R28402           6.032087</span></span>
+<span><span class="co">#&gt; R28408           6.298229</span></span>
+<span><span class="co">#&gt; R28409           6.053847</span></span>
+<span><span class="co">#&gt; R28416           5.998940</span></span>
+<span><span class="co">#&gt; R28417           6.138375</span></span>
+<span><span class="co">#&gt; R28423           6.222035</span></span>
+<span><span class="co">#&gt; R28424           6.326649</span></span>
+<span><span class="co">#&gt; R28425           6.135861</span></span>
+<span><span class="co">#&gt; R28427           6.282609</span></span>
+<span><span class="co">#&gt; R28434           6.427184</span></span>
+<span><span class="co">#&gt; R28436           6.434721</span></span>
+<span><span class="co">#&gt; R28437           6.395132</span></span>
+<span><span class="co">#&gt; R28453           6.285133</span></span>
+<span><span class="co">#&gt; R28454           5.911657</span></span>
+<span><span class="co">#&gt; R28456           6.371622</span></span>
+<span><span class="co">#&gt; R28457           6.239782</span></span>
+<span><span class="co">#&gt; R28463           6.127067</span></span>
+<span><span class="co">#&gt; R28464           6.287524</span></span>
+<span><span class="co">#&gt; R28470           6.235805</span></span>
+<span><span class="co">#&gt; R28471           6.389448</span></span>
+<span><span class="co">#&gt; R28481           6.335875</span></span>
+<span><span class="co">#&gt; R28483           6.081721</span></span>
+<span><span class="co">#&gt; R28489           6.195184</span></span>
+<span><span class="co">#&gt; R28490           6.361663</span></span>
+<span><span class="co">#&gt; R28503           6.260248</span></span>
+<span><span class="co">#&gt; R28504           6.331142</span></span>
+<span><span class="co">#&gt; R28511           6.439461</span></span>
+<span><span class="co">#&gt; R28512           6.186302</span></span>
+<span><span class="co">#&gt; R28514           6.175235</span></span>
+<span><span class="co">#&gt; R28515           6.028437</span></span>
+<span><span class="co">#&gt; R28518           6.257430</span></span>
+<span><span class="co">#&gt; R28519           5.991977</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">peak_counts_t</span> <span class="op">=</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">peak_counts</span>, <span class="kw">function</span><span class="op">(</span><span class="va">.x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.x</span>, <span class="st">"samp"</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span>, <span class="st">"samp_id"</span><span class="op">]</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">count_mat</span> <span class="op">=</span> <span class="fu"><a href="../reference/formatMatrixForCorrelation.html">formatMatrixForCorrelation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">gene_counts</span><span class="op">)</span>, <span class="va">peak_counts_t</span><span class="op">)</span></span>
+<span><span class="va">count_mat</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+ENSRNOG00000000008_RNASeq
+</th>
+<th style="text-align:right;">
+ENSRNOG00000000082_RNASeq
+</th>
+<th style="text-align:right;">
+ENSRNOG00000001489_RNASeq
+</th>
+<th style="text-align:right;">
+chr3:78683169:78683832_H3K27ac
+</th>
+<th style="text-align:right;">
+chr3:78708054:78708512_H3K27ac
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+R18804
+</td>
+<td style="text-align:right;">
+6.226779
+</td>
+<td style="text-align:right;">
+7.267295
+</td>
+<td style="text-align:right;">
+7.768652
+</td>
+<td style="text-align:right;">
+5.974274
+</td>
+<td style="text-align:right;">
+5.830707
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+R18805
+</td>
+<td style="text-align:right;">
+6.150745
+</td>
+<td style="text-align:right;">
+7.324605
+</td>
+<td style="text-align:right;">
+8.032395
+</td>
+<td style="text-align:right;">
+6.015659
+</td>
+<td style="text-align:right;">
+5.922595
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+R18809
+</td>
+<td style="text-align:right;">
+6.388451
+</td>
+<td style="text-align:right;">
+7.220238
+</td>
+<td style="text-align:right;">
+7.814327
+</td>
+<td style="text-align:right;">
+6.018896
+</td>
+<td style="text-align:right;">
+5.880515
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+R18810
+</td>
+<td style="text-align:right;">
+6.201142
+</td>
+<td style="text-align:right;">
+7.341687
+</td>
+<td style="text-align:right;">
+7.850113
+</td>
+<td style="text-align:right;">
+6.069272
+</td>
+<td style="text-align:right;">
+6.599047
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+R18819
+</td>
+<td style="text-align:right;">
+6.328846
+</td>
+<td style="text-align:right;">
+7.358075
+</td>
+<td style="text-align:right;">
+7.973985
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">full_cor_res</span> <span class="op">=</span> <span class="fu"><a href="../reference/correlateByChromosome.html">correlateByChromosome</a></span><span class="op">(</span><span class="va">count_mat</span>, <span class="va">p2g_ls</span><span class="op">$</span><span class="va">correlation_pairs</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Starting chr1</span></span>
+<span><span class="co">#&gt; 0.021 sec elapsed</span></span>
+<span><span class="co">#&gt; Starting chr2</span></span>
+<span><span class="co">#&gt; 0.007 sec elapsed</span></span>
+<span><span class="co">#&gt; Starting chr3</span></span>
+<span><span class="co">#&gt; 0.331 sec elapsed</span></span>
+<span><span class="co">#&gt; Joining with `by = join_by(regulatory_element, target_id, link_label, chr,</span></span>
+<span><span class="co">#&gt; modality_pair, r, n, P)`</span></span>
+<span><span class="va">full_cor_res</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr>
+<th style="text-align:left;">
+ensembl_gene_id
+</th>
+<th style="text-align:left;">
+regulatory_element
+</th>
+<th style="text-align:left;">
+target_id
+</th>
+<th style="text-align:left;">
+link_label
+</th>
+<th style="text-align:left;">
+chr
+</th>
+<th style="text-align:left;">
+modality_pair
+</th>
+<th style="text-align:right;">
+r
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+P
+</th>
+<th style="text-align:right;">
+BH
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78634005:78634640_ATACSeq
+</td>
+<td style="text-align:left;">
+chr3:79610922:79613046_H3K4me3
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:left;">
+ATACSeq-H3K4me3
+</td>
+<td style="text-align:right;">
+0.1656186
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+0.2225149
+</td>
+<td style="text-align:right;">
+0.8032780
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78652401:78653178_H3K4me1
+</td>
+<td style="text-align:left;">
+chr3:79610922:79613046_H3K4me3
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:left;">
+H3K4me1-H3K4me3
+</td>
+<td style="text-align:right;">
+0.0949883
+</td>
+<td style="text-align:right;">
+59
+</td>
+<td style="text-align:right;">
+0.4742207
+</td>
+<td style="text-align:right;">
+0.9788157
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78652614:78653063_ATACSeq
+</td>
+<td style="text-align:left;">
+chr3:79610922:79613046_H3K4me3
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:left;">
+ATACSeq-H3K4me3
+</td>
+<td style="text-align:right;">
+-0.0216678
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+0.8740562
+</td>
+<td style="text-align:right;">
+0.9817481
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78683169:78683832_H3K27ac
+</td>
+<td style="text-align:left;">
+chr3:79610922:79613046_H3K4me3
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:left;">
+H3K27ac-H3K4me3
+</td>
+<td style="text-align:right;">
+0.0444185
+</td>
+<td style="text-align:right;">
+59
+</td>
+<td style="text-align:right;">
+0.7383421
+</td>
+<td style="text-align:right;">
+0.9916836
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78683236:78683697_H3K4me1
+</td>
+<td style="text-align:left;">
+chr3:79610922:79613046_H3K4me3
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:left;">
+H3K4me1-H3K4me3
+</td>
+<td style="text-align:right;">
+0.1593074
+</td>
+<td style="text-align:right;">
+59
+</td>
+<td style="text-align:right;">
+0.2281274
+</td>
+<td style="text-align:right;">
+0.9237553
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">processed_cor</span> <span class="op">=</span> <span class="fu"><a href="../reference/processCorrelations.html">processCorrelations</a></span><span class="op">(</span><span class="va">count_mat</span>, <span class="va">full_cor_res</span>, <span class="va">p2g_ls</span><span class="op">$</span><span class="va">correlation_pairs</span>, <span class="va">p2g_ls</span><span class="op">$</span><span class="va">p2g_info</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Joining with `by = join_by(ensembl_gene_id, regulatory_element)`</span></span>
+<span><span class="co">#&gt; Joining with `by = join_by(ensembl_gene_id, regulatory_element, target_id)`</span></span>
+<span><span class="co">#&gt; Joining with `by = join_by(ensembl_gene_id, regulatory_element, target_id)`</span></span>
+<span><span class="co">#&gt; ### Correlating ambiguous peaks with other distal peaks assocaited with gene</span></span>
+<span><span class="co">#&gt; ### pre fxn: disclude: 74 neg: 22 pos: 22</span></span>
+<span><span class="co">#&gt; round 1: disclude: 2 drop: 27 neg: 44 pos: 45</span></span>
+<span><span class="co">#&gt; round 2: disclude: 1 drop: 27 neg: 44 pos: 46</span></span>
+<span><span class="co">#&gt; round 3: disclude: 1 drop: 27 neg: 44 pos: 46</span></span>
+<span><span class="co">#&gt; round 4: disclude: 1 drop: 27 neg: 44 pos: 46</span></span>
+<span><span class="co">#&gt; round 5: drop: 28 neg: 44 pos: 46</span></span>
+<span><span class="va">processed_cor</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr>
+<th style="text-align:left;">
+ensembl_gene_id
+</th>
+<th style="text-align:left;">
+regulatory_element
+</th>
+<th style="text-align:left;">
+link_label
+</th>
+<th style="text-align:left;">
+modality_pair
+</th>
+<th style="text-align:right;">
+r
+</th>
+<th style="text-align:right;">
+BH
+</th>
+<th style="text-align:right;">
+dist_to_tss
+</th>
+<th style="text-align:left;">
+region2gene_dir
+</th>
+<th style="text-align:right;">
+region2gene_conf
+</th>
+<th style="text-align:left;">
+target_id
+</th>
+<th style="text-align:left;">
+chr
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+P
+</th>
+<th style="text-align:left;">
+sig_cor
+</th>
+<th style="text-align:left;">
+prom_peak_sig_cor_w_gene
+</th>
+<th style="text-align:left;">
+distal_no_promoter
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78634005:78634640_ATACSeq
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-ATACSeq
+</td>
+<td style="text-align:right;">
+0.3013569
+</td>
+<td style="text-align:right;">
+0.0043280
+</td>
+<td style="text-align:right;">
+-977078
+</td>
+<td style="text-align:left;">
+pos
+</td>
+<td style="text-align:right;">
+4.001
+</td>
+<td style="text-align:left;">
+chr3:79611428:79612928_ATACSeq
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:right;">
+123
+</td>
+<td style="text-align:right;">
+0.0007061
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78702369:78702924_ATACSeq
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-ATACSeq
+</td>
+<td style="text-align:right;">
+0.3539229
+</td>
+<td style="text-align:right;">
+0.0006360
+</td>
+<td style="text-align:right;">
+-908794
+</td>
+<td style="text-align:left;">
+pos
+</td>
+<td style="text-align:right;">
+4.001
+</td>
+<td style="text-align:left;">
+chr3:79611428:79612928_ATACSeq
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:right;">
+123
+</td>
+<td style="text-align:right;">
+0.0000592
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78713352:78714085_ATACSeq
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-ATACSeq
+</td>
+<td style="text-align:right;">
+0.2480879
+</td>
+<td style="text-align:right;">
+0.0226489
+</td>
+<td style="text-align:right;">
+-897633
+</td>
+<td style="text-align:left;">
+pos
+</td>
+<td style="text-align:right;">
+4.001
+</td>
+<td style="text-align:left;">
+chr3:79611428:79612928_ATACSeq
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:right;">
+123
+</td>
+<td style="text-align:right;">
+0.0056622
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78734426:78734839_ATACSeq
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-ATACSeq
+</td>
+<td style="text-align:right;">
+-0.3866776
+</td>
+<td style="text-align:right;">
+0.0001516
+</td>
+<td style="text-align:right;">
+-876879
+</td>
+<td style="text-align:left;">
+neg
+</td>
+<td style="text-align:right;">
+4.001
+</td>
+<td style="text-align:left;">
+chr3:79611428:79612928_ATACSeq
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:right;">
+123
+</td>
+<td style="text-align:right;">
+0.0000100
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ENSRNOG00000000008
+</td>
+<td style="text-align:left;">
+chr3:78783524:78783997_ATACSeq
+</td>
+<td style="text-align:left;">
+distal_peak_to_promoter_peak
+</td>
+<td style="text-align:left;">
+ATACSeq-ATACSeq
+</td>
+<td style="text-align:right;">
+0.2642814
+</td>
+<td style="text-align:right;">
+0.0135542
+</td>
+<td style="text-align:right;">
+-827721
+</td>
+<td style="text-align:left;">
+pos
+</td>
+<td style="text-align:right;">
+4.001
+</td>
+<td style="text-align:left;">
+chr3:79611428:79612928_ATACSeq
+</td>
+<td style="text-align:left;">
+chr3
+</td>
+<td style="text-align:right;">
+123
+</td>
+<td style="text-align:right;">
+0.0031389
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.2 (2025-10-31)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -355,33 +1605,34 @@ chr3
 <span><span class="co">#&gt;  [9] tibble_3.3.1      ggplot2_4.0.1     tidyverse_2.0.0  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] KEGGREST_1.50.0      gtable_0.3.6         httr2_1.2.2         </span></span>
-<span><span class="co">#&gt;  [4] xfun_0.56            bslib_0.9.0          Biobase_2.70.0      </span></span>
-<span><span class="co">#&gt;  [7] tzdb_0.5.0           vctrs_0.7.0          tools_4.5.2         </span></span>
-<span><span class="co">#&gt; [10] generics_0.1.4       curl_7.0.0           stats4_4.5.2        </span></span>
-<span><span class="co">#&gt; [13] AnnotationDbi_1.72.0 RSQLite_2.4.5        blob_1.3.0          </span></span>
-<span><span class="co">#&gt; [16] pkgconfig_2.0.3      dbplyr_2.5.1         RColorBrewer_1.1-3  </span></span>
-<span><span class="co">#&gt; [19] S7_0.2.1             desc_1.4.3           S4Vectors_0.48.0    </span></span>
-<span><span class="co">#&gt; [22] lifecycle_1.0.5      compiler_4.5.2       farver_2.1.2        </span></span>
-<span><span class="co">#&gt; [25] Biostrings_2.78.0    progress_1.2.3       tictoc_1.2.1        </span></span>
-<span><span class="co">#&gt; [28] textshaping_1.0.4    Seqinfo_1.0.0        GenomeInfoDb_1.46.2 </span></span>
-<span><span class="co">#&gt; [31] htmltools_0.5.9      sass_0.4.10          yaml_2.3.12         </span></span>
-<span><span class="co">#&gt; [34] crayon_1.5.3         pillar_1.11.1        pkgdown_2.2.0       </span></span>
-<span><span class="co">#&gt; [37] jquerylib_0.1.4      cachem_1.1.0         gtools_3.9.5        </span></span>
-<span><span class="co">#&gt; [40] tidyselect_1.2.1     digest_0.6.39        stringi_1.8.7       </span></span>
-<span><span class="co">#&gt; [43] biomaRt_2.66.0       fastmap_1.2.0        grid_4.5.2          </span></span>
-<span><span class="co">#&gt; [46] cli_3.6.5            magrittr_2.0.4       withr_3.0.2         </span></span>
-<span><span class="co">#&gt; [49] prettyunits_1.2.0    filelock_1.0.3       rappdirs_0.3.4      </span></span>
-<span><span class="co">#&gt; [52] scales_1.4.0         UCSC.utils_1.6.1     bit64_4.6.0-1       </span></span>
-<span><span class="co">#&gt; [55] timechange_0.3.0     XVector_0.50.0       rmarkdown_2.30      </span></span>
-<span><span class="co">#&gt; [58] httr_1.4.7           bit_4.6.0            png_0.1-8           </span></span>
-<span><span class="co">#&gt; [61] ragg_1.5.0           hms_1.1.4            memoise_2.0.1       </span></span>
-<span><span class="co">#&gt; [64] kableExtra_1.4.0     evaluate_1.0.5       knitr_1.51          </span></span>
-<span><span class="co">#&gt; [67] GenomicRanges_1.62.1 IRanges_2.44.0       BiocFileCache_3.0.0 </span></span>
-<span><span class="co">#&gt; [70] viridisLite_0.4.2    rlang_1.1.7          glue_1.8.0          </span></span>
-<span><span class="co">#&gt; [73] DBI_1.2.3            xml2_1.5.2           BiocGenerics_0.56.0 </span></span>
-<span><span class="co">#&gt; [76] svglite_2.2.2        rstudioapi_0.18.0    jsonlite_2.0.0      </span></span>
-<span><span class="co">#&gt; [79] R6_2.6.1             systemfonts_1.3.1    fs_1.6.6</span></span></code></pre></div>
+<span><span class="co">#&gt;  [1] tidyselect_1.2.1     viridisLite_0.4.2    farver_2.1.2        </span></span>
+<span><span class="co">#&gt;  [4] blob_1.3.0           filelock_1.0.3       Biostrings_2.78.0   </span></span>
+<span><span class="co">#&gt;  [7] S7_0.2.1             fastmap_1.2.0        BiocFileCache_3.0.0 </span></span>
+<span><span class="co">#&gt; [10] janitor_2.2.1        digest_0.6.39        timechange_0.3.0    </span></span>
+<span><span class="co">#&gt; [13] lifecycle_1.0.5      KEGGREST_1.50.0      RSQLite_2.4.5       </span></span>
+<span><span class="co">#&gt; [16] magrittr_2.0.4       compiler_4.5.2       rlang_1.1.7         </span></span>
+<span><span class="co">#&gt; [19] sass_0.4.10          progress_1.2.3       tools_4.5.2         </span></span>
+<span><span class="co">#&gt; [22] yaml_2.3.12          knitr_1.51           prettyunits_1.2.0   </span></span>
+<span><span class="co">#&gt; [25] bit_4.6.0            curl_7.0.0           xml2_1.5.2          </span></span>
+<span><span class="co">#&gt; [28] RColorBrewer_1.1-3   withr_3.0.2          BiocGenerics_0.56.0 </span></span>
+<span><span class="co">#&gt; [31] desc_1.4.3           grid_4.5.2           stats4_4.5.2        </span></span>
+<span><span class="co">#&gt; [34] scales_1.4.0         gtools_3.9.5         biomaRt_2.66.0      </span></span>
+<span><span class="co">#&gt; [37] cli_3.6.5            rmarkdown_2.30       crayon_1.5.3        </span></span>
+<span><span class="co">#&gt; [40] ragg_1.5.0           generics_0.1.4       rstudioapi_0.18.0   </span></span>
+<span><span class="co">#&gt; [43] httr_1.4.7           tzdb_0.5.0           DBI_1.2.3           </span></span>
+<span><span class="co">#&gt; [46] cachem_1.1.0         AnnotationDbi_1.72.0 XVector_0.50.0      </span></span>
+<span><span class="co">#&gt; [49] matrixStats_1.5.0    vctrs_0.7.0          jsonlite_2.0.0      </span></span>
+<span><span class="co">#&gt; [52] IRanges_2.44.0       hms_1.1.4            S4Vectors_0.48.0    </span></span>
+<span><span class="co">#&gt; [55] bit64_4.6.0-1        systemfonts_1.3.1    jquerylib_0.1.4     </span></span>
+<span><span class="co">#&gt; [58] glue_1.8.0           pkgdown_2.2.0        stringi_1.8.7       </span></span>
+<span><span class="co">#&gt; [61] gtable_0.3.6         GenomeInfoDb_1.46.2  GenomicRanges_1.62.1</span></span>
+<span><span class="co">#&gt; [64] UCSC.utils_1.6.1     pillar_1.11.1        rappdirs_0.3.4      </span></span>
+<span><span class="co">#&gt; [67] htmltools_0.5.9      Seqinfo_1.0.0        R6_2.6.1            </span></span>
+<span><span class="co">#&gt; [70] dbplyr_2.5.1         httr2_1.2.2          textshaping_1.0.4   </span></span>
+<span><span class="co">#&gt; [73] evaluate_1.0.5       kableExtra_1.4.0     Biobase_2.70.0      </span></span>
+<span><span class="co">#&gt; [76] png_0.1-8            tictoc_1.2.1         memoise_2.0.1       </span></span>
+<span><span class="co">#&gt; [79] snakecase_0.11.1     bslib_0.9.0          svglite_2.2.2       </span></span>
+<span><span class="co">#&gt; [82] xfun_0.56            fs_1.6.6             pkgconfig_2.0.3</span></span></code></pre></div>
 </div>
   </main>
 </div>

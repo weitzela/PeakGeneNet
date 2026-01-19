@@ -8,7 +8,7 @@ save on memory
 ``` r
 correlateByChromosome(
   count_mat,
-  all_pairs_df,
+  correlation_pairs,
   grp_contrast = NULL,
   rds_fn = NULL
 )
@@ -20,7 +20,7 @@ correlateByChromosome(
 
   numeric matrix with features as columns and samples as rows
 
-- all_pairs_df:
+- correlation_pairs:
 
   dataframe supplying all pairs of features
 
