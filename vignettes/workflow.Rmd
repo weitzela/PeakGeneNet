@@ -64,7 +64,7 @@ If your experimental design is simple, you have a lot of samples, and your data 
 
 Correlation-based analyses are sensitive to unwanted variation. In multi-factor experimental designs, failing to account for technical effects or biological variables can reduce power, inflate variance, or introduce type I errors. To prepare the data for use in the PeakGeneNet pipeline, we recommend an adjustment strategy targeting both technical and experimental correction while preserving the design and contrast of interest. This approach allows users to ask multiple questions from the same dataset while ensuring that the signal relevant to a contrast of interest is preserved. Different contrasts can be explored by re-running this adjustment step with different protected variables. 
 
-Data provided at this stage should **NOT** be raw counts. Rather, vst, log, or inverse-rank normalized counts. Adjustment is performed in two steps, reflecting standard best practices used in RNA-Seq and epigenomic analyses, where known biology is retained and unwanted variation is removed:  
+Data provided at this stage should **not** be raw counts. Instead, input matrices should be transofrmed (e.g., VST, log, or inverse-rank normalization) to improve comparability across samples. Adjustment is performed in two steps, following standard best practices used in RNA-Seq and epigenomic analyses that preserve biological signal while removing unwanted variation:  
 
 1.	Removal of technical and latent sources of variation, while explicitly preserving the experimental design.  
     * Latent sources of variation in this example are variables prefixed by "W_" and included because they capture technical effects.  
