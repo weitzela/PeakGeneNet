@@ -64,12 +64,6 @@ p2g_ls$correlation_pairs |>
 
 Then, carry out and process the correlations using the following functions. The count matrices to for used as the input for the correlation analysis should have samples in rows and features in columns.
 ```{r}
-tmp_mat = t(gene_counts)[,c(1,1)]
-!duplicated(colnames(tmp_mat))
-tmp_mat[,-duplicated(colnames(tmp_mat)),drop=FALSE]
-```
-
-```{r}
 peak_counts_t = map(peak_counts, function(.x) {
   colnames(.x) = attr(.x, "samp")[colnames(.x), "samp_id"]
   return(t(.x))
