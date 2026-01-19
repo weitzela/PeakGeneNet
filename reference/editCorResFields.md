@@ -5,7 +5,7 @@ Annotation of significant promoter peak information
 ## Usage
 
 ``` r
-editCorResFields(df)
+editCorResFields(df, BH_thresh = 0.05)
 ```
 
 ## Arguments

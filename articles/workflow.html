@@ -70,7 +70,7 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://weitzela.github.io/PeakGeneNet/">PeakGeneNet</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="data-preparation">1. Data Preparation<a class="anchor" aria-label="anchor" href="#data-preparation"></a>
+<h2 id="peak-gene-link-preparation">1. Peak-Gene Link Preparation<a class="anchor" aria-label="anchor" href="#peak-gene-link-preparation"></a>
 </h2>
 <p>Use these objects to create peak-gene pairs for inclusion in the
 correlation analysis. The <code>p2g_info</code> provides information for
@@ -613,148 +613,99 @@ Total
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section level2">
+<h2 id="data-adjustment">2. Data Adjustment<a class="anchor" aria-label="anchor" href="#data-adjustment"></a>
+</h2>
+<p>If your experimental design is simple, you have a lot of samples, and
+your data does not show signs of variation, then you can skip this step
+and move onto the correlation analysis.</p>
+<p>Correlation-based analyses are sensitive to unwanted variation. In
+multi-factor experimental designs, failing to account for technical
+effects or biological variables can reduce power, inflate variance, or
+introduce type I errors. To prepare the data for use in the PeakGeneNet
+pipeline, we recommend an adjustment strategy targeting both technical
+and experimental correction while preserving the design and contrast of
+interest. This approach allows users to ask multiple questions from the
+same dataset while ensuring that the signal relevant to a contrast of
+interest is preserved. Different contrasts can be explored by re-running
+this adjustment step with different protected variables.</p>
+<p>Data provided at this stage should <strong>not</strong> be raw
+counts. Instead, input matrices should be transofrmed (e.g., VST, log,
+or inverse-rank normalization) to improve comparability across samples.
+Adjustment is performed in two steps, following standard best practices
+used in RNA-Seq and epigenomic analyses that preserve biological signal
+while removing unwanted variation:</p>
+<ol style="list-style-type: decimal">
+<li>Removal of technical and latent sources of variation, while
+explicitly preserving the experimental design.
+<ul>
+<li>Latent sources of variation in this example are variables prefixed
+by “W_” and included because they capture technical effects.<br>
+</li>
+</ul>
+</li>
+<li>Regression of additional experimental covariates, while protecting
+one or more contrasts of interest.
+<ul>
+<li>Protected variables should correspond directly to the hypothesis
+being tested.</li>
+</ul>
+</li>
+</ol>
+<p>The example data files in this vignette contain a
+<code>sample_info</code> attribute where libraries are ordered in the
+same order as what is contained in the count matrix. The objects are set
+up in this manner to easily apply the same adjustment strategy to all
+data. This example study has four experimental variables of rat lines,
+sex, acute exercise groups, and a training group.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># this is a way to apply the same adjustment strategy across all modalities</span></span>
+<span><span class="va">experimental_vars</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"line"</span>, <span class="st">"sex"</span>, <span class="st">"grp"</span>, <span class="st">"train.sed"</span><span class="op">)</span> </span>
+<span><span class="va">adj_counts</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>RNASeq <span class="op">=</span> <span class="va">gene_counts</span><span class="op">)</span>, <span class="va">peak_counts</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">.count_mat</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">pheno_df</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.count_mat</span>, <span class="st">"samp"</span><span class="op">)</span></span>
+<span>    <span class="co"># step 1: remove technical variation</span></span>
+<span>    <span class="va">adj_tmp</span> <span class="op">=</span> <span class="fu">limma</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/limma/man/removeBatchEffect.html" class="external-link">removeBatchEffect</a></span><span class="op">(</span></span>
+<span>      <span class="va">.count_mat</span>, </span>
+<span>      batch <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="st">"prep_date"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">pheno_df</span><span class="op">)</span><span class="op">)</span> <span class="va">pheno_df</span><span class="op">[[</span><span class="st">"prep_date"</span><span class="op">]</span><span class="op">]</span> <span class="kw">else</span> <span class="va">pheno_df</span><span class="op">[[</span><span class="st">""</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>      batch2 <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="st">"flowcell"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">pheno_df</span><span class="op">)</span><span class="op">)</span> <span class="va">pheno_df</span><span class="op">[[</span><span class="st">"flowcell"</span><span class="op">]</span><span class="op">]</span> <span class="kw">else</span> <span class="va">pheno_df</span><span class="op">[[</span><span class="st">""</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>      covariates <span class="op">=</span> <span class="va">pheno_df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"W_"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>      design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/delete.response.html" class="external-link">reformulate</a></span><span class="op">(</span><span class="va">experimental_vars</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">pheno_df</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="co"># step 2: regress out additional experimental covariates, while retaining effects attributed to the experimental group of interest</span></span>
+<span>    <span class="va">adj_counts</span> <span class="op">=</span> <span class="fu"><a href="../reference/adjustCovariateMatrix.html">adjustCovariateMatrix</a></span><span class="op">(</span></span>
+<span>      counts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">adj_tmp</span><span class="op">)</span>,</span>
+<span>      covariate_df <span class="op">=</span> <span class="va">pheno_df</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="va">experimental_vars</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>      vars_to_protect <span class="op">=</span> <span class="st">"grp"</span> </span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="co"># replace library IDs with common sample IDs that can be matched across matrices </span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">adj_counts</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">adj_counts</span>, <span class="st">"samp"</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">adj_counts</span><span class="op">)</span>, <span class="st">"samp_id"</span><span class="op">]</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">adj_counts</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="correlations">3. Correlations<a class="anchor" aria-label="anchor" href="#correlations"></a>
+</h2>
 <p>Then, carry out and process the correlations using the following
 functions. The count matrices used as the input for the correlation
 analysis should have samples in rows and features in columns.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">peak_counts_t</span> <span class="op">=</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">peak_counts</span>, <span class="kw">function</span><span class="op">(</span><span class="va">.x</span><span class="op">)</span> <span class="op">{</span></span>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">count_mat</span> <span class="op">=</span> <span class="fu"><a href="../reference/formatMatrixForCorrelation.html">formatMatrixForCorrelation</a></span><span class="op">(</span><span class="va">adj_counts</span><span class="op">$</span><span class="va">RNASeq</span>, <span class="va">adj_counts</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/keep_at.html" class="external-link">discard_at</a></span><span class="op">(</span><span class="st">"RNASeq"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># count_mat[1:5,1:5] |&gt; kableExtra::kable()</span></span>
+<span></span>
+<span><span class="va">peak_counts_t</span> <span class="op">=</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">peak_counts</span>, <span class="kw">function</span><span class="op">(</span><span class="va">.x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.x</span>, <span class="st">"samp"</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span>, <span class="st">"samp_id"</span><span class="op">]</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">count_mat</span> <span class="op">=</span> <span class="fu"><a href="../reference/formatMatrixForCorrelation.html">formatMatrixForCorrelation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">gene_counts</span><span class="op">)</span>, <span class="va">peak_counts_t</span><span class="op">)</span></span>
-<span><span class="va">count_mat</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr>
-<th style="text-align:left;">
-</th>
-<th style="text-align:right;">
-ENSRNOG00000000008_RNASeq
-</th>
-<th style="text-align:right;">
-ENSRNOG00000000082_RNASeq
-</th>
-<th style="text-align:right;">
-ENSRNOG00000001489_RNASeq
-</th>
-<th style="text-align:right;">
-chr3:78683169:78683832_H3K27ac
-</th>
-<th style="text-align:right;">
-chr3:78708054:78708512_H3K27ac
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-R18804
-</td>
-<td style="text-align:right;">
-6.226779
-</td>
-<td style="text-align:right;">
-7.267295
-</td>
-<td style="text-align:right;">
-7.768652
-</td>
-<td style="text-align:right;">
-5.974274
-</td>
-<td style="text-align:right;">
-5.830707
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-R18805
-</td>
-<td style="text-align:right;">
-6.150745
-</td>
-<td style="text-align:right;">
-7.324605
-</td>
-<td style="text-align:right;">
-8.032395
-</td>
-<td style="text-align:right;">
-6.015659
-</td>
-<td style="text-align:right;">
-5.922595
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-R18809
-</td>
-<td style="text-align:right;">
-6.388451
-</td>
-<td style="text-align:right;">
-7.220238
-</td>
-<td style="text-align:right;">
-7.814327
-</td>
-<td style="text-align:right;">
-6.018896
-</td>
-<td style="text-align:right;">
-5.880515
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-R18810
-</td>
-<td style="text-align:right;">
-6.201142
-</td>
-<td style="text-align:right;">
-7.341687
-</td>
-<td style="text-align:right;">
-7.850113
-</td>
-<td style="text-align:right;">
-6.069272
-</td>
-<td style="text-align:right;">
-6.599047
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-R18819
-</td>
-<td style="text-align:right;">
-6.328846
-</td>
-<td style="text-align:right;">
-7.358075
-</td>
-<td style="text-align:right;">
-7.973985
-</td>
-<td style="text-align:right;">
-NA
-</td>
-<td style="text-align:right;">
-NA
-</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
+<span><span class="op">}</span><span class="op">)</span>; <span class="va">count_mat</span> <span class="op">=</span> <span class="fu"><a href="../reference/formatMatrixForCorrelation.html">formatMatrixForCorrelation</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">gene_counts</span><span class="op">)</span>, <span class="va">peak_counts_t</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">full_cor_res</span> <span class="op">=</span> <span class="fu"><a href="../reference/correlateByChromosome.html">correlateByChromosome</a></span><span class="op">(</span><span class="va">count_mat</span>, <span class="va">p2g_ls</span><span class="op">$</span><span class="va">correlation_pairs</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Starting chr1</span></span>
-<span><span class="co">#&gt; 0.356 sec elapsed</span></span>
+<span><span class="co">#&gt; 0.02 sec elapsed</span></span>
 <span><span class="co">#&gt; Starting chr2</span></span>
-<span><span class="co">#&gt; 0.007 sec elapsed</span></span>
+<span><span class="co">#&gt; 0.324 sec elapsed</span></span>
 <span><span class="co">#&gt; Starting chr3</span></span>
-<span><span class="co">#&gt; 0.009 sec elapsed</span></span>
+<span><span class="co">#&gt; 0.007 sec elapsed</span></span>
 <span><span class="co">#&gt; Joining with `by = join_by(regulatory_element, target_id, link_label, chr,</span></span>
 <span><span class="co">#&gt; modality_pair, r, n, P)`</span></span>
 <span><span class="va">full_cor_res</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -956,322 +907,10 @@ H3K4me1-H3K4me3
 </table>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="va">processed_cor</span> <span class="op">=</span> <span class="fu"><a href="../reference/processCorrelations.html">processCorrelations</a></span><span class="op">(</span><span class="va">count_mat</span>, <span class="va">full_cor_res</span>, <span class="va">p2g_ls</span><span class="op">$</span><span class="va">correlation_pairs</span>, <span class="va">p2g_ls</span><span class="op">$</span><span class="va">p2g_info</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Joining with `by = join_by(ensembl_gene_id, regulatory_element)`</span></span>
-<span><span class="co">#&gt; Joining with `by = join_by(ensembl_gene_id, regulatory_element, target_id)`</span></span>
-<span><span class="co">#&gt; Joining with `by = join_by(ensembl_gene_id, regulatory_element, target_id)`</span></span>
-<span><span class="co">#&gt; ### Correlating ambiguous peaks with other distal peaks assocaited with gene</span></span>
-<span><span class="co">#&gt; ### pre fxn: disclude: 74 neg: 22 pos: 22</span></span>
-<span><span class="co">#&gt; round 1: disclude: 2 drop: 27 neg: 44 pos: 45</span></span>
-<span><span class="co">#&gt; round 2: disclude: 1 drop: 27 neg: 44 pos: 46</span></span>
-<span><span class="co">#&gt; round 3: disclude: 1 drop: 27 neg: 44 pos: 46</span></span>
-<span><span class="co">#&gt; round 4: disclude: 1 drop: 27 neg: 44 pos: 46</span></span>
-<span><span class="co">#&gt; round 5: drop: 28 neg: 44 pos: 46</span></span>
-<span><span class="va">processed_cor</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr>
-<th style="text-align:left;">
-ensembl_gene_id
-</th>
-<th style="text-align:left;">
-regulatory_element
-</th>
-<th style="text-align:left;">
-link_label
-</th>
-<th style="text-align:left;">
-modality_pair
-</th>
-<th style="text-align:right;">
-r
-</th>
-<th style="text-align:right;">
-BH
-</th>
-<th style="text-align:right;">
-dist_to_tss
-</th>
-<th style="text-align:left;">
-region2gene_dir
-</th>
-<th style="text-align:right;">
-region2gene_conf
-</th>
-<th style="text-align:left;">
-target_id
-</th>
-<th style="text-align:left;">
-chr
-</th>
-<th style="text-align:right;">
-n
-</th>
-<th style="text-align:right;">
-P
-</th>
-<th style="text-align:left;">
-sig_cor
-</th>
-<th style="text-align:left;">
-prom_peak_sig_cor_w_gene
-</th>
-<th style="text-align:left;">
-distal_no_promoter
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78634005:78634640_ATACSeq
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-ATACSeq-ATACSeq
-</td>
-<td style="text-align:right;">
-0.3013569
-</td>
-<td style="text-align:right;">
-0.0043280
-</td>
-<td style="text-align:right;">
--977078
-</td>
-<td style="text-align:left;">
-pos
-</td>
-<td style="text-align:right;">
-4.001
-</td>
-<td style="text-align:left;">
-chr3:79611428:79612928_ATACSeq
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-<td style="text-align:right;">
-123
-</td>
-<td style="text-align:right;">
-0.0007061
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78702369:78702924_ATACSeq
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-ATACSeq-ATACSeq
-</td>
-<td style="text-align:right;">
-0.3539229
-</td>
-<td style="text-align:right;">
-0.0006360
-</td>
-<td style="text-align:right;">
--908794
-</td>
-<td style="text-align:left;">
-pos
-</td>
-<td style="text-align:right;">
-4.001
-</td>
-<td style="text-align:left;">
-chr3:79611428:79612928_ATACSeq
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-<td style="text-align:right;">
-123
-</td>
-<td style="text-align:right;">
-0.0000592
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78713352:78714085_ATACSeq
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-ATACSeq-ATACSeq
-</td>
-<td style="text-align:right;">
-0.2480879
-</td>
-<td style="text-align:right;">
-0.0226489
-</td>
-<td style="text-align:right;">
--897633
-</td>
-<td style="text-align:left;">
-pos
-</td>
-<td style="text-align:right;">
-4.001
-</td>
-<td style="text-align:left;">
-chr3:79611428:79612928_ATACSeq
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-<td style="text-align:right;">
-123
-</td>
-<td style="text-align:right;">
-0.0056622
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78734426:78734839_ATACSeq
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-ATACSeq-ATACSeq
-</td>
-<td style="text-align:right;">
--0.3866776
-</td>
-<td style="text-align:right;">
-0.0001516
-</td>
-<td style="text-align:right;">
--876879
-</td>
-<td style="text-align:left;">
-neg
-</td>
-<td style="text-align:right;">
-4.001
-</td>
-<td style="text-align:left;">
-chr3:79611428:79612928_ATACSeq
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-<td style="text-align:right;">
-123
-</td>
-<td style="text-align:right;">
-0.0000100
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:left;">
-chr3:78783524:78783997_ATACSeq
-</td>
-<td style="text-align:left;">
-distal_peak_to_promoter_peak
-</td>
-<td style="text-align:left;">
-ATACSeq-ATACSeq
-</td>
-<td style="text-align:right;">
-0.2642814
-</td>
-<td style="text-align:right;">
-0.0135542
-</td>
-<td style="text-align:right;">
--827721
-</td>
-<td style="text-align:left;">
-pos
-</td>
-<td style="text-align:right;">
-4.001
-</td>
-<td style="text-align:left;">
-chr3:79611428:79612928_ATACSeq
-</td>
-<td style="text-align:left;">
-chr3
-</td>
-<td style="text-align:right;">
-123
-</td>
-<td style="text-align:right;">
-0.0031389
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-</tr>
-</tbody>
-</table>
+<span><span class="co"># this will not run because of the limited genes and peaks included in the example data</span></span>
+<span><span class="co"># but this is a way to process and interpret the results </span></span>
+<span><span class="co"># processed_cor = processCorrelations(count_mat, full_cor_res, p2g_ls$correlation_pairs, p2g_ls$p2g_info)</span></span>
+<span><span class="co"># processed_cor |&gt; head(5) |&gt; kableExtra::kable()</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.2 (2025-10-31)</span></span>
@@ -1304,32 +943,34 @@ FALSE
 <span><span class="co">#&gt;  [4] blob_1.3.0           filelock_1.0.3       Biostrings_2.78.0   </span></span>
 <span><span class="co">#&gt;  [7] S7_0.2.1             fastmap_1.2.0        BiocFileCache_3.0.0 </span></span>
 <span><span class="co">#&gt; [10] janitor_2.2.1        digest_0.6.39        timechange_0.3.0    </span></span>
-<span><span class="co">#&gt; [13] lifecycle_1.0.5      KEGGREST_1.50.0      RSQLite_2.4.5       </span></span>
-<span><span class="co">#&gt; [16] magrittr_2.0.4       compiler_4.5.2       rlang_1.1.7         </span></span>
-<span><span class="co">#&gt; [19] sass_0.4.10          progress_1.2.3       tools_4.5.2         </span></span>
-<span><span class="co">#&gt; [22] yaml_2.3.12          knitr_1.51           prettyunits_1.2.0   </span></span>
-<span><span class="co">#&gt; [25] bit_4.6.0            curl_7.0.0           xml2_1.5.2          </span></span>
-<span><span class="co">#&gt; [28] RColorBrewer_1.1-3   withr_3.0.2          BiocGenerics_0.56.0 </span></span>
-<span><span class="co">#&gt; [31] desc_1.4.3           grid_4.5.2           stats4_4.5.2        </span></span>
-<span><span class="co">#&gt; [34] scales_1.4.0         gtools_3.9.5         biomaRt_2.66.0      </span></span>
-<span><span class="co">#&gt; [37] cli_3.6.5            rmarkdown_2.30       crayon_1.5.3        </span></span>
-<span><span class="co">#&gt; [40] ragg_1.5.0           generics_0.1.4       rstudioapi_0.18.0   </span></span>
-<span><span class="co">#&gt; [43] httr_1.4.7           tzdb_0.5.0           DBI_1.2.3           </span></span>
-<span><span class="co">#&gt; [46] cachem_1.1.0         AnnotationDbi_1.72.0 XVector_0.50.0      </span></span>
-<span><span class="co">#&gt; [49] matrixStats_1.5.0    vctrs_0.7.0          jsonlite_2.0.0      </span></span>
-<span><span class="co">#&gt; [52] IRanges_2.44.0       hms_1.1.4            S4Vectors_0.48.0    </span></span>
-<span><span class="co">#&gt; [55] bit64_4.6.0-1        systemfonts_1.3.1    jquerylib_0.1.4     </span></span>
-<span><span class="co">#&gt; [58] glue_1.8.0           pkgdown_2.2.0        stringi_1.8.7       </span></span>
-<span><span class="co">#&gt; [61] gtable_0.3.6         GenomeInfoDb_1.46.2  GenomicRanges_1.62.1</span></span>
-<span><span class="co">#&gt; [64] UCSC.utils_1.6.1     pillar_1.11.1        rappdirs_0.3.4      </span></span>
-<span><span class="co">#&gt; [67] htmltools_0.5.9      Seqinfo_1.0.0        R6_2.6.1            </span></span>
-<span><span class="co">#&gt; [70] dbplyr_2.5.1         httr2_1.2.2          textshaping_1.0.4   </span></span>
-<span><span class="co">#&gt; [73] evaluate_1.0.5       kableExtra_1.4.0     Biobase_2.70.0      </span></span>
-<span><span class="co">#&gt; [76] png_0.1-8            tictoc_1.2.1         snakecase_0.11.1    </span></span>
-<span><span class="co">#&gt; [79] memoise_2.0.1        bslib_0.9.0          svglite_2.2.2       </span></span>
-<span><span class="co">#&gt; [82] xfun_0.56            fs_1.6.6             pkgconfig_2.0.3</span></span></code></pre></div>
+<span><span class="co">#&gt; [13] lifecycle_1.0.5      statmod_1.5.1        KEGGREST_1.50.0     </span></span>
+<span><span class="co">#&gt; [16] RSQLite_2.4.5        magrittr_2.0.4       compiler_4.5.2      </span></span>
+<span><span class="co">#&gt; [19] rlang_1.1.7          sass_0.4.10          progress_1.2.3      </span></span>
+<span><span class="co">#&gt; [22] tools_4.5.2          yaml_2.3.12          knitr_1.51          </span></span>
+<span><span class="co">#&gt; [25] prettyunits_1.2.0    bit_4.6.0            curl_7.0.0          </span></span>
+<span><span class="co">#&gt; [28] xml2_1.5.2           RColorBrewer_1.1-3   withr_3.0.2         </span></span>
+<span><span class="co">#&gt; [31] BiocGenerics_0.56.0  desc_1.4.3           grid_4.5.2          </span></span>
+<span><span class="co">#&gt; [34] stats4_4.5.2         scales_1.4.0         gtools_3.9.5        </span></span>
+<span><span class="co">#&gt; [37] biomaRt_2.66.0       cli_3.6.5            rmarkdown_2.30      </span></span>
+<span><span class="co">#&gt; [40] crayon_1.5.3         ragg_1.5.0           generics_0.1.4      </span></span>
+<span><span class="co">#&gt; [43] rstudioapi_0.18.0    httr_1.4.7           tzdb_0.5.0          </span></span>
+<span><span class="co">#&gt; [46] DBI_1.2.3            cachem_1.1.0         AnnotationDbi_1.72.0</span></span>
+<span><span class="co">#&gt; [49] XVector_0.50.0       matrixStats_1.5.0    vctrs_0.7.0         </span></span>
+<span><span class="co">#&gt; [52] jsonlite_2.0.0       IRanges_2.44.0       hms_1.1.4           </span></span>
+<span><span class="co">#&gt; [55] S4Vectors_0.48.0     bit64_4.6.0-1        systemfonts_1.3.1   </span></span>
+<span><span class="co">#&gt; [58] limma_3.66.0         jquerylib_0.1.4      glue_1.8.0          </span></span>
+<span><span class="co">#&gt; [61] pkgdown_2.2.0        stringi_1.8.7        gtable_0.3.6        </span></span>
+<span><span class="co">#&gt; [64] GenomeInfoDb_1.46.2  GenomicRanges_1.62.1 UCSC.utils_1.6.1    </span></span>
+<span><span class="co">#&gt; [67] pillar_1.11.1        rappdirs_0.3.4       htmltools_0.5.9     </span></span>
+<span><span class="co">#&gt; [70] Seqinfo_1.0.0        R6_2.6.1             dbplyr_2.5.1        </span></span>
+<span><span class="co">#&gt; [73] httr2_1.2.2          textshaping_1.0.4    evaluate_1.0.5      </span></span>
+<span><span class="co">#&gt; [76] kableExtra_1.4.0     Biobase_2.70.0       png_0.1-8           </span></span>
+<span><span class="co">#&gt; [79] tictoc_1.2.1         snakecase_0.11.1     memoise_2.0.1       </span></span>
+<span><span class="co">#&gt; [82] bslib_0.9.0          svglite_2.2.2        xfun_0.56           </span></span>
+<span><span class="co">#&gt; [85] fs_1.6.6             pkgconfig_2.0.3</span></span></code></pre></div>
 </div>
-  </main>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

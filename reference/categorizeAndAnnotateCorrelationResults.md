@@ -6,7 +6,11 @@ downstream information for interpreting linked networks
 ## Usage
 
 ``` r
-categorizeAndAnnotateCorrelationResults(.sig_cor_genes, p2g_info)
+categorizeAndAnnotateCorrelationResults(
+  .sig_cor_genes,
+  p2g_info,
+  BH_thresh = 0.05
+)
 ```
 
 ## Arguments

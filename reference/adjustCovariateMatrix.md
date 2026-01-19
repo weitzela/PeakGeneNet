@@ -1,6 +1,7 @@
 # Use of matrix functions to adjust data via linear model
 
-Use of matrix functions to adjust data via linear model
+This is a wrapper function that adjusts for multiple additional
+experimental variables while protecting the contrast(s) of interest.
 
 ## Usage
 

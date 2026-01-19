@@ -25,7 +25,12 @@ Directional assignments are categorized into 3 levels:
 ## Usage
 
 ``` r
-assignRegion2GeneDirection(sig_cor_res, all_cor_res, count_mat)
+assignRegion2GeneDirection(
+  sig_cor_res,
+  all_cor_res,
+  count_mat,
+  BH_thresh = 0.05
+)
 ```
 
 ## Arguments

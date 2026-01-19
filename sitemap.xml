@@ -5,8 +5,6 @@
 <url><loc>https://weitzela.github.io/PeakGeneNet/articles/workflow.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/authors.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/index.html</loc></url>
-<url><loc>https://weitzela.github.io/PeakGeneNet/reference/adjustCounts.html</loc></url>
-<url><loc>https://weitzela.github.io/PeakGeneNet/reference/adjustCountsMultipleContrasts.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/adjustCovariateMatrix.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/assignRegion2GeneDirection.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/calculateDirectedDistance.html</loc></url>
@@ -23,6 +21,5 @@
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/matrixCorrelation.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/peak_counts.html</loc></url>
 <url><loc>https://weitzela.github.io/PeakGeneNet/reference/processCorrelations.html</loc></url>
-<url><loc>https://weitzela.github.io/PeakGeneNet/reference/removeBatchEffect_wrapper.html</loc></url>
 </urlset>
 
