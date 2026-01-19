@@ -5,13 +5,23 @@
 \title{Create Peak-Gene Links
 Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have \emph{unique} feature IDs.}
 \usage{
-createPeak2GeneObjects(gene_counts, peak_counts, biomart_ensembl, ucsc_genome)
+createPeak2GeneObjects(genes, peaks, biomart_ensembl, ucsc_genome)
+}
+\arguments{
+\item{genes}{either a character vector of ensembl IDs or a matrix with the row or column names as the ensembl IDs}
+
+\item{peaks}{a named list of character vectors containing renomic region. Genomic regions should begin with "chr". The list can also contain count matrices, where row names or column names are genomic regions.}
 }
 \description{
 Create Peak-Gene Links
 Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have \emph{unique} feature IDs.
 }
 \examples{
-# createPeak2GeneObjects(gene_counts, peak_counts, biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109), "rn7")
+# genes = c("ENSRNOG00000000008", "ENSRNOG00000000082", "ENSRNOG00000001489")
+# peaks = list(
+     ATACSeq = c("chr2:101609880:101610274", "chr2:102047604:102048070", "chr3:79872103:79872545"),
+     H3K4me3 = c("chr2:102549207:102550717", "chr3:79617231:79617692", "chr3:79610922:79613046")
+     )
+# createPeak2GeneObjects(genes, peaks, biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109), "rn7")
 
 }

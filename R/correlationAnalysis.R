@@ -59,18 +59,45 @@ matrixCorrelation = function(mat1, mat2, type = c("pearson", "spearman"), rank_d
   return(results_df)
 }
 
+#' Format input
+#' 
+#' This function pastes the modality at the end of each feature ID and then combines the matrices into one matrix object. The matrices must have common sample IDs as the rownames to join by.
+#' @param gene_counts count matrix where rownames are sample IDs and colnames are feature ID
+#' @export
+formatMatrixForCorrelation = function(gene_counts, peak_counts) {
+  stopifnot(inherits(gene_counts, c("matrix", "numeric")))
+  stopifnot(inherits(peak_counts, "list"))
+  stopifnot(any(purrr::map_lgl(peak_counts, ~ inherits(.x, c("matrix", "numeric")))))
+  count_mat = c(list(RNASeq = gene_counts), peak_counts) |> 
+    purrr::imap(function(.mat, .modality) {
+      duplicated_features = duplicated(colnames(.mat))
+      if (any(duplicated_features)) {
+        message(sum(duplicated_features), " duplicated feature(s) from the ", .modality, " matrix removed, based on repeated column IDs.")
+        .mat = .mat[,!duplicated_features,drop=FALSE]
+      }
+      colnames(.mat) = paste0(colnames(.mat), "_", .modality)
+      .mat = as.data.frame(.mat) |> 
+        tibble::rownames_to_column(var = "samp_id")
+      return(.mat)
+    }) |> 
+    purrr::reduce(dplyr::full_join, by = "samp_id") |> 
+    tibble::column_to_rownames(var = "samp_id") |> 
+    as.matrix()
+  return(count_mat)
+}
+
 #' A wrapper function to carry out correlations in smaller chunks to help save on memory
 #' 
 #' @param count_mat numeric matrix with features as columns and samples as rows
-#' @param all_pairs_df dataframe supplying all pairs of features
+#' @param correlation_pairs dataframe supplying all pairs of features
 #' @param grp_contrast a way to filter to include samples from only certain groups
 #' @param rds_fn filename to save the output to for future access
 #' @return a dataframe of full results
 #' @export
-correlateByChromosome = function(count_mat, all_pairs_df, grp_contrast = NULL, rds_fn = NULL) {
-  # all_pairs_list is a dataframe with the following columns: ensembl_gene_id, reegulatory element, target_id, link_label, chr, modality_pair
+correlateByChromosome = function(count_mat, correlation_pairs, grp_contrast = NULL, rds_fn = NULL) {
+  # correlation_pairs is a dataframe with the following columns: ensembl_gene_id, reegulatory element, target_id, link_label, chr, modality_pair
   # split pairs by chromosome to and create distinct list of region pairs to correlate
-  chr_pair_ls = all_pairs_df |> select(-any_of(c("ensembl_gene_id"))) |> 
+  chr_pair_ls = correlation_pairs |> select(-any_of(c("ensembl_gene_id"))) |> 
     distinct() |> 
     (\(x) split(x, x$chr))()
   if (!is.null(grp_contrast)) {
@@ -130,7 +157,6 @@ correlateByChromosome = function(count_mat, all_pairs_df, grp_contrast = NULL, r
 #' Annotation of significant promoter peak information
 #' @param df the correlation results
 #' @return an annotated dataframe 
-#' @export
 editCorResFields = function(df) {
   sig_promoter_peaks = df |> 
     filter(BH < 0.05, link_label == "promoter_peak_to_gene") |> 
@@ -396,4 +422,25 @@ assignRegion2GeneDirection = function(sig_cor_res, all_cor_res, count_mat) {
     distinct() |> 
     left_join(region2gene_dir_df, by = c("ensembl_gene_id", "regulatory_element", "region2gene_dir"))
   return(region2gene_dir_df)
+}
+
+#' Process correlation results
+#' 
+#' Genes with a significant correlation with either a promoter or distal peak are retained and focused on further.
+#' @export
+processCorrelations = function(count_mat, cor_res, correlation_pairs, p2g_info) {
+  genes_with_sig_anno = cor_res |> 
+    filter((link_label %in% grep("to_gene$", levels(link_label), value = TRUE)) & (P < 0.01)) |> 
+    pull(ensembl_gene_id) |> 
+    unique()
+  sig_cor = cor_res |> 
+    filter(ensembl_gene_id %in% genes_with_sig_anno) |> 
+    mutate(sig_cor = BH < 0.05) 
+  anno_cor_res = categorizeAndAnnotateCorrelationResults(sig_cor, p2g_info)
+  region2gene_dir = assignRegion2GeneDirection(anno_cor_res, cor_res, count_mat)
+  sig_cor_res = anno_cor_res |> 
+    left_join(region2gene_dir, by = c("ensembl_gene_id", "regulatory_element")) |> 
+    relocate(ensembl_gene_id, regulatory_element, link_label, modality_pair, r, BH, dist_to_tss, starts_with("region2gene")) #|> 
+    # filter(region2gene_dir != "drop")
+  return(sig_cor_res)
 }
