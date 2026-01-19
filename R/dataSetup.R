@@ -110,26 +110,26 @@ createPeak2GeneObjects = function(gene_counts, peak_counts, biomart_ensembl, ucs
     subset(gene_gr, annotation == "TSS")[non_proximal_overlaps$ensembl_gene_id]
   )
   
-  promoter_peaks_for_paired_df = promoter_peaks |>
+  promoter_peaks_for_p2g_info = promoter_peaks |>
     `names<-`(NULL) |> 
     GenomicRanges::mcols() |>
     as.data.frame() |>
     dplyr::mutate(promoter_peak = TRUE) |>
     dplyr::mutate(dist_to_tss = calculateDirectedDistance(peak_gr[unique_id], subset(gene_gr, annotation == "TSS")[ensembl_gene_id]))
   
-  paired_df = non_proximal_overlaps |>
+  p2g_info = non_proximal_overlaps |>
     `names<-`(NULL) |> 
     GenomicRanges::mcols() |>
     as.data.frame() |>
     dplyr::select(unique_id, region_id, modality, ensembl_gene_id) |>
     mutate(dist_to_tss = dist_to_tss) |>
     dplyr::mutate(promoter_peak = FALSE) |>
-    dplyr::bind_rows(promoter_peaks_for_paired_df) |>
+    dplyr::bind_rows(promoter_peaks_for_p2g_info) |>
     dplyr::arrange(ensembl_gene_id) |>
     # remove H3K4me3 connections that are too far away from the promoter region and would not be expected biologically
     dplyr::filter(!((modality == "H3K4me3") & (abs(dist_to_tss) > 1e4)))
   
-  all_pairs = split(paired_df, paired_df$ensembl_gene_id) |>
+  correlation_pairs = split(p2g_info, p2g_info$ensembl_gene_id) |>
     purrr::imap(function(.df, .gene) {
       promoter_peaks = dplyr::filter(.df, promoter_peak) |> dplyr::pull(unique_id)
       if (length(promoter_peaks) == 0) return(NULL)
@@ -151,7 +151,7 @@ createPeak2GeneObjects = function(gene_counts, peak_counts, biomart_ensembl, ucs
     dplyr::mutate(chr = GenomeInfoDb::seqnames(subset(gene_gr, annotation == "TSS")[ensembl_gene_id]) |> as.character()) |>
     dplyr::mutate(chr = factor(chr, levels = gtools::mixedsort(unique(chr)))) |>
     dplyr::mutate(link_label = factor(link_label, levels = c("promoter_peak_to_gene", "distal_peak_to_gene", "distal_peak_to_promoter_peak", "promoter_peak_to_promoter_peak")))
-  # all_pairs = all_pairs |>
+  # correlation_pairs = correlation_pairs |>
   #   dplyr::mutate(re_modality = peak_gr[regulatory_element]$modality)
   # dplyr::mutate(re_modality = removeStrAroundCharacter(regulatory_element, "_", "before"),
   #               t_modality = removeStrAroundCharacter(target_id, "_", "before")) |>
@@ -159,5 +159,5 @@ createPeak2GeneObjects = function(gene_counts, peak_counts, biomart_ensembl, ucs
   #                 modality_pair = factor(modality_pair)) |>
   #   dplyr::select(-c(re_modality, t_modality))
   
-  return(list(gene_gr = gene_gr, peak_gr = peak_gr, paired_df = paired_df, all_pairs = all_pairs))
+  return(list(gene_gr = gene_gr, peak_gr = peak_gr, p2g_info = p2g_info, correlation_pairs = correlation_pairs))
 }

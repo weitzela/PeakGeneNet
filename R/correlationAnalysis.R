@@ -113,7 +113,7 @@ correlateByChromosome = function(count_mat, all_pairs_df, grp_contrast = NULL, r
     saveRDS(cor_results, rds_fn, compress = FALSE)
   }
   # join the original pair information to the paired correlation results
-  full_cor_res = all_pairs |> 
+  full_cor_res = correlation_pairs |> 
     left_join(cor_results |> dplyr::rename("regulatory_element" = "var1", "target_id" = "var2"), by = c("regulatory_element", "target_id"))
   # calculate adjusted pvalue within modality-pair:link-label groups
   p_adj = full_cor_res |>
@@ -147,12 +147,12 @@ editCorResFields = function(df) {
 
 #' Annotation of genes that are significant and provide some additional downstream information for interpreting linked networks
 #' @param .sig_cor_genes dataframe that includes genes with significant correlations
-#' @param paired_df dataframe
+#' @param p2g_info dataframe
 #' @return an annotated dataframe
-categorizeAndAnnotateCorrelationResults = function(.sig_cor_genes, paired_df) {
+categorizeAndAnnotateCorrelationResults = function(.sig_cor_genes, p2g_info) {
   sig_cor_res = .sig_cor_genes |> 
     filter(BH < 0.05) |> 
-    left_join(select(paired_df, ensembl_gene_id, regulatory_element = unique_id, dist_to_tss)) |> 
+    left_join(select(p2g_info, ensembl_gene_id, regulatory_element = unique_id, dist_to_tss)) |> 
     editCorResFields() 
   # distal peaks that are correlated with genes AND also correlated with a promoter peak that is correlated with a gene will also have a TRUE value in the prom_peak_sig_cor_w_gene column
   distal_gene_prom_connection = sig_cor_res |> 
