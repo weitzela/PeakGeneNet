@@ -72,176 +72,6 @@
 <div class="section level2">
 <h2 id="data-preparation">1. Data Preparation<a class="anchor" aria-label="anchor" href="#data-preparation"></a>
 </h2>
-<p>Required objects:</p>
-<ul>
-<li>Gene counts: this is a matrix where the row names should be ensembl
-IDs<br><table class="table">
-<thead><tr>
-<th style="text-align:left;">
-</th>
-<th style="text-align:right;">
-R18804
-</th>
-<th style="text-align:right;">
-R18805
-</th>
-<th style="text-align:right;">
-R18809
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000008
-</td>
-<td style="text-align:right;">
-6.226779
-</td>
-<td style="text-align:right;">
-6.150745
-</td>
-<td style="text-align:right;">
-6.388451
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000000082
-</td>
-<td style="text-align:right;">
-7.267295
-</td>
-<td style="text-align:right;">
-7.324605
-</td>
-<td style="text-align:right;">
-7.220238
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ENSRNOG00000001489
-</td>
-<td style="text-align:right;">
-7.768652
-</td>
-<td style="text-align:right;">
-8.032395
-</td>
-<td style="text-align:right;">
-7.814327
-</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li>Peak counts: a list object with one or more matrices. Matrices
-should be in same format as gene counts, with row names as genomic
-region where the chromosome names, start, and end locations are
-separaated by a punctuation mark (e.g., chr1:123:456 or chr1:123-456).
-<table class="table">
-<thead><tr>
-<th style="text-align:left;">
-</th>
-<th style="text-align:right;">
-PL119617
-</th>
-<th style="text-align:right;">
-PL119618
-</th>
-<th style="text-align:right;">
-PL119619
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-chr2:103325658:103326019
-</td>
-<td style="text-align:right;">
-6.616630
-</td>
-<td style="text-align:right;">
-6.816892
-</td>
-<td style="text-align:right;">
-6.210107
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chr2:103337000:103337431
-</td>
-<td style="text-align:right;">
-7.643895
-</td>
-<td style="text-align:right;">
-7.417112
-</td>
-<td style="text-align:right;">
-7.204352
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chr2:103483778:103484423
-</td>
-<td style="text-align:right;">
-7.449124
-</td>
-<td style="text-align:right;">
-7.336309
-</td>
-<td style="text-align:right;">
-7.031643
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chr3:78634005:78634640
-</td>
-<td style="text-align:right;">
-6.754136
-</td>
-<td style="text-align:right;">
-6.966854
-</td>
-<td style="text-align:right;">
-7.031643
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chr3:78652614:78653063
-</td>
-<td style="text-align:right;">
-6.707064
-</td>
-<td style="text-align:right;">
-6.966854
-</td>
-<td style="text-align:right;">
-6.674483
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chr3:78702369:78702924
-</td>
-<td style="text-align:right;">
-6.890375
-</td>
-<td style="text-align:right;">
-7.033393
-</td>
-<td style="text-align:right;">
-7.272677
-</td>
-</tr>
-</tbody>
-</table>
-</li>
-</ul>
 <p>Use these objects to create peak-gene pairs for inclusion in the
 correlation analysis. The <code>p2g_info</code> provides information for
 individual peaks per gene they will be correlated with. The
@@ -784,9 +614,8 @@ Total
 </tbody>
 </table>
 <p>Then, carry out and process the correlations using the following
-functions. The count matrices to for used as the input for the
-correlation analysis should have samples in rows and features in
-columns.</p>
+functions. The count matrices used as the input for the correlation
+analysis should have samples in rows and features in columns.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">peak_counts_t</span> <span class="op">=</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">peak_counts</span>, <span class="kw">function</span><span class="op">(</span><span class="va">.x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.x</span>, <span class="st">"samp"</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span>, <span class="st">"samp_id"</span><span class="op">]</span></span>
@@ -921,11 +750,11 @@ NA
 <code class="sourceCode R"><span></span>
 <span><span class="va">full_cor_res</span> <span class="op">=</span> <span class="fu"><a href="../reference/correlateByChromosome.html">correlateByChromosome</a></span><span class="op">(</span><span class="va">count_mat</span>, <span class="va">p2g_ls</span><span class="op">$</span><span class="va">correlation_pairs</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Starting chr1</span></span>
-<span><span class="co">#&gt; 0.022 sec elapsed</span></span>
+<span><span class="co">#&gt; 0.356 sec elapsed</span></span>
 <span><span class="co">#&gt; Starting chr2</span></span>
 <span><span class="co">#&gt; 0.007 sec elapsed</span></span>
 <span><span class="co">#&gt; Starting chr3</span></span>
-<span><span class="co">#&gt; 0.013 sec elapsed</span></span>
+<span><span class="co">#&gt; 0.009 sec elapsed</span></span>
 <span><span class="co">#&gt; Joining with `by = join_by(regulatory_element, target_id, link_label, chr,</span></span>
 <span><span class="co">#&gt; modality_pair, r, n, P)`</span></span>
 <span><span class="va">full_cor_res</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">kableExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -1496,8 +1325,8 @@ FALSE
 <span><span class="co">#&gt; [67] htmltools_0.5.9      Seqinfo_1.0.0        R6_2.6.1            </span></span>
 <span><span class="co">#&gt; [70] dbplyr_2.5.1         httr2_1.2.2          textshaping_1.0.4   </span></span>
 <span><span class="co">#&gt; [73] evaluate_1.0.5       kableExtra_1.4.0     Biobase_2.70.0      </span></span>
-<span><span class="co">#&gt; [76] png_0.1-8            tictoc_1.2.1         memoise_2.0.1       </span></span>
-<span><span class="co">#&gt; [79] snakecase_0.11.1     bslib_0.9.0          svglite_2.2.2       </span></span>
+<span><span class="co">#&gt; [76] png_0.1-8            tictoc_1.2.1         snakecase_0.11.1    </span></span>
+<span><span class="co">#&gt; [79] memoise_2.0.1        bslib_0.9.0          svglite_2.2.2       </span></span>
 <span><span class="co">#&gt; [82] xfun_0.56            fs_1.6.6             pkgconfig_2.0.3</span></span></code></pre></div>
 </div>
   </main>

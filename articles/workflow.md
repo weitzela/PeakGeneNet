@@ -10,28 +10,6 @@ library(PeakGeneNet)
 
 ## 1. Data Preparation
 
-Required objects:
-
-- Gene counts: this is a matrix where the row names should be ensembl
-  IDs  
-  |                    |   R18804 |   R18805 |   R18809 |
-  |:-------------------|---------:|---------:|---------:|
-  | ENSRNOG00000000008 | 6.226779 | 6.150745 | 6.388451 |
-  | ENSRNOG00000000082 | 7.267295 | 7.324605 | 7.220238 |
-  | ENSRNOG00000001489 | 7.768652 | 8.032395 | 7.814327 |
-- Peak counts: a list object with one or more matrices. Matrices should
-  be in same format as gene counts, with row names as genomic region
-  where the chromosome names, start, and end locations are separaated by
-  a punctuation mark (e.g., chr1:123:456 or chr1:123-456).
-  |                          | PL119617 | PL119618 | PL119619 |
-  |:-------------------------|---------:|---------:|---------:|
-  | chr2:103325658:103326019 | 6.616630 | 6.816892 | 6.210107 |
-  | chr2:103337000:103337431 | 7.643895 | 7.417112 | 7.204352 |
-  | chr2:103483778:103484423 | 7.449124 | 7.336309 | 7.031643 |
-  | chr3:78634005:78634640   | 6.754136 | 6.966854 | 7.031643 |
-  | chr3:78652614:78653063   | 6.707064 | 6.966854 | 6.674483 |
-  | chr3:78702369:78702924   | 6.890375 | 7.033393 | 7.272677 |
-
 Use these objects to create peak-gene pairs for inclusion in the
 correlation analysis. The `p2g_info` provides information for individual
 peaks per gene they will be correlated with. The `correlation_pairs`
@@ -84,9 +62,8 @@ p2g_ls$correlation_pairs |>
 [TABLE]
 
 Then, carry out and process the correlations using the following
-functions. The count matrices to for used as the input for the
-correlation analysis should have samples in rows and features in
-columns.
+functions. The count matrices used as the input for the correlation
+analysis should have samples in rows and features in columns.
 
 ``` r
 peak_counts_t = map(peak_counts, function(.x) {
@@ -109,11 +86,11 @@ count_mat[1:5,1:5] |> kableExtra::kable()
 
 full_cor_res = correlateByChromosome(count_mat, p2g_ls$correlation_pairs)
 #> Starting chr1
-#> 0.022 sec elapsed
+#> 0.356 sec elapsed
 #> Starting chr2
 #> 0.007 sec elapsed
 #> Starting chr3
-#> 0.013 sec elapsed
+#> 0.009 sec elapsed
 #> Joining with `by = join_by(regulatory_element, target_id, link_label, chr,
 #> modality_pair, r, n, P)`
 full_cor_res |> head(5) |> kableExtra::kable()
@@ -204,7 +181,7 @@ sessionInfo()
 #> [67] htmltools_0.5.9      Seqinfo_1.0.0        R6_2.6.1            
 #> [70] dbplyr_2.5.1         httr2_1.2.2          textshaping_1.0.4   
 #> [73] evaluate_1.0.5       kableExtra_1.4.0     Biobase_2.70.0      
-#> [76] png_0.1-8            tictoc_1.2.1         memoise_2.0.1       
-#> [79] snakecase_0.11.1     bslib_0.9.0          svglite_2.2.2       
+#> [76] png_0.1-8            tictoc_1.2.1         snakecase_0.11.1    
+#> [79] memoise_2.0.1        bslib_0.9.0          svglite_2.2.2       
 #> [82] xfun_0.56            fs_1.6.6             pkgconfig_2.0.3
 ```
