@@ -25,10 +25,7 @@ library(tidyverse)
 library(PeakGeneNet)
 ```
 
-# 1. Data Preparation  
-
-
-
+# 1. Peak-Gene Link Preparation  
 ```{r, echo=FALSE}
 # Required objects:
 #   * Gene counts: this is a matrix where the row names should be ensembl IDs  
@@ -62,23 +59,65 @@ p2g_ls$correlation_pairs |>
   kableExtra::kable()
 ```
 
+# 2. Data Adjustment  
+If your experimental design is simple, you have a lot of samples, and your data does not show signs of variation, then you can skip this step and move onto the correlation analysis.  
+
+Correlation-based analyses are sensitive to unwanted variation. In multi-factor experimental designs, failing to account for technical effects or biological variables can reduce power, inflate variance, or introduce type I errors. To prepare the data for use in the PeakGeneNet pipeline, we recommend an adjustment strategy targeting both technical and experimental correction while preserving the design and contrast of interest. This approach allows users to ask multiple questions from the same dataset while ensuring that the signal relevant to a contrast of interest is preserved. Different contrasts can be explored by re-running this adjustment step with different protected variables. 
+
+Data provided at this stage should **not** be raw counts. Instead, input matrices should be transofrmed (e.g., VST, log, or inverse-rank normalization) to improve comparability across samples. Adjustment is performed in two steps, following standard best practices used in RNA-Seq and epigenomic analyses that preserve biological signal while removing unwanted variation:  
+
+1.	Removal of technical and latent sources of variation, while explicitly preserving the experimental design.  
+    * Latent sources of variation in this example are variables prefixed by "W_" and included because they capture technical effects.  
+2.	Regression of additional experimental covariates, while protecting one or more contrasts of interest.  
+    * Protected variables should correspond directly to the hypothesis being tested.  
+
+The example data files in this vignette contain a `sample_info` attribute where libraries are ordered in the same order as what is contained in the count matrix. The objects are set up in this manner to easily apply the same adjustment strategy to all data. This example study has four experimental variables of rat lines, sex, acute exercise groups, and a training group. 
+```{r}
+# this is a way to apply the same adjustment strategy across all modalities
+experimental_vars = c("line", "sex", "grp", "train.sed") 
+adj_counts = c(list(RNASeq = gene_counts), peak_counts) |> 
+  map(function(.count_mat) {
+    pheno_df = attr(.count_mat, "samp")
+    # step 1: remove technical variation
+    adj_tmp = limma::removeBatchEffect(
+      .count_mat, 
+      batch = if ("prep_date" %in% colnames(pheno_df)) pheno_df[["prep_date"]] else pheno_df[[""]],
+      batch2 = if ("flowcell" %in% colnames(pheno_df)) pheno_df[["flowcell"]] else pheno_df[[""]],
+      covariates = pheno_df |> select(starts_with("W_")),
+      design = model.matrix(reformulate(experimental_vars), data = pheno_df)
+    )
+    # step 2: regress out additional experimental covariates, while retaining effects attributed to the experimental group of interest
+    adj_counts = adjustCovariateMatrix(
+      counts = t(adj_tmp),
+      covariate_df = pheno_df |> select(all_of(experimental_vars)), 
+      vars_to_protect = "grp" 
+    )
+    # replace library IDs with common sample IDs that can be matched across matrices 
+    rownames(adj_counts) = attr(adj_counts, "samp")[rownames(adj_counts), "samp_id"]
+    return(adj_counts)
+  })
+```
+
+# 3. Correlations
 Then, carry out and process the correlations using the following functions. The count matrices used as the input for the correlation analysis should have samples in rows and features in columns.
 ```{r}
+count_mat = formatMatrixForCorrelation(adj_counts$RNASeq, adj_counts |> discard_at("RNASeq"))
+# count_mat[1:5,1:5] |> kableExtra::kable()
+
 peak_counts_t = map(peak_counts, function(.x) {
   colnames(.x) = attr(.x, "samp")[colnames(.x), "samp_id"]
   return(t(.x))
-})
-count_mat = formatMatrixForCorrelation(t(gene_counts), peak_counts_t)
-count_mat[1:5,1:5] |> kableExtra::kable()
+}); count_mat = formatMatrixForCorrelation(t(gene_counts), peak_counts_t)
 
 full_cor_res = correlateByChromosome(count_mat, p2g_ls$correlation_pairs)
 full_cor_res |> head(5) |> kableExtra::kable()
 
-processed_cor = processCorrelations(count_mat, full_cor_res, p2g_ls$correlation_pairs, p2g_ls$p2g_info)
-processed_cor |> head(5) |> kableExtra::kable()
+# this will not run because of the limited genes and peaks included in the example data
+# but this is a way to process and interpret the results 
+# processed_cor = processCorrelations(count_mat, full_cor_res, p2g_ls$correlation_pairs, p2g_ls$p2g_info)
+# processed_cor |> head(5) |> kableExtra::kable()
 ```
 
 ```{r}
 sessionInfo()
 ```
-

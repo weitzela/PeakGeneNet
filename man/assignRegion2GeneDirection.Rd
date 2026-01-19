@@ -4,7 +4,12 @@
 \alias{assignRegion2GeneDirection}
 \title{The results from all correlations are used to help assign direction using correlations that have a significant nominal pvalue}
 \usage{
-assignRegion2GeneDirection(sig_cor_res, all_cor_res, count_mat)
+assignRegion2GeneDirection(
+  sig_cor_res,
+  all_cor_res,
+  count_mat,
+  BH_thresh = 0.05
+)
 }
 \arguments{
 \item{sig_cor_res}{dataframe with the significant results to annotate link direction}
