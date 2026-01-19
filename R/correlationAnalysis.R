@@ -157,9 +157,9 @@ correlateByChromosome = function(count_mat, correlation_pairs, grp_contrast = NU
 #' Annotation of significant promoter peak information
 #' @param df the correlation results
 #' @return an annotated dataframe 
-editCorResFields = function(df) {
+editCorResFields = function(df, BH_thresh = 0.05) {
   sig_promoter_peaks = df |> 
-    filter(BH < 0.05, link_label == "promoter_peak_to_gene") |> 
+    filter(BH < BH_thresh, link_label == "promoter_peak_to_gene") |> 
     select(ensembl_gene_id, regulatory_element) |> 
     distinct() |> 
     mutate(prom_peak_sig_cor_w_gene = TRUE)
@@ -175,9 +175,9 @@ editCorResFields = function(df) {
 #' @param .sig_cor_genes dataframe that includes genes with significant correlations
 #' @param p2g_info dataframe
 #' @return an annotated dataframe
-categorizeAndAnnotateCorrelationResults = function(.sig_cor_genes, p2g_info) {
+categorizeAndAnnotateCorrelationResults = function(.sig_cor_genes, p2g_info, BH_thresh = 0.05) {
   sig_cor_res = .sig_cor_genes |> 
-    filter(BH < 0.05) |> 
+    filter(BH < BH_thresh) |> 
     left_join(select(p2g_info, ensembl_gene_id, regulatory_element = unique_id, dist_to_tss)) |> 
     editCorResFields() 
   # distal peaks that are correlated with genes AND also correlated with a promoter peak that is correlated with a gene will also have a TRUE value in the prom_peak_sig_cor_w_gene column
@@ -193,7 +193,7 @@ categorizeAndAnnotateCorrelationResults = function(.sig_cor_genes, p2g_info) {
   distal_no_promoter = .sig_cor_genes |> 
     editCorResFields() |> 
     filter(!prom_peak_sig_cor_w_gene) |> 
-    filter(((link_label %in% c("distal_peak_to_gene", "distal_peak_to_promoter_peak")) & BH < 0.05)) |> 
+    filter(((link_label %in% c("distal_peak_to_gene", "distal_peak_to_promoter_peak")) & BH < BH_thresh)) |> 
     group_by(ensembl_gene_id, regulatory_element) |> 
     filter(length(unique(link_label)) > 1) |> 
     select(ensembl_gene_id, regulatory_element, target_id) |> 
@@ -286,6 +286,7 @@ corWithDistalPeak_wrapper = function(full_cor_df, count_mat, v = TRUE, .iter_bat
   df = full_cor_df
   i = 1
   n_discluded = df |> filter(region2gene_dir == "disclude") |> nrow()
+  if (n_discluded == 0) return(df |> filter(region2gene_dir == "disclude") |> mutate(iter_n = NA))
   if (v) message("### Correlating ambiguous peaks with other distal peaks assocaited with gene ###\npre fxn: ", df$region2gene_dir |> table() |> (\(x) paste0(names(x), ":\t", scales::comma(as.numeric(x)), collapse = "\t"))())
   while ((n_discluded > 0) & i < 20) {
     df = corWithDistalPeak(df, full_cor_df, count_mat, i, iter_batch_cutoff = .iter_batch_cutoff)
@@ -308,7 +309,7 @@ corWithDistalPeak_wrapper = function(full_cor_df, count_mat, v = TRUE, .iter_bat
 #' @param count_mat matrix of counts supplied to correlation analysis
 #' @return dataframe with peak-gene link annotation directions with the degree of confidence 
 #' @export
-assignRegion2GeneDirection = function(sig_cor_res, all_cor_res, count_mat) {
+assignRegion2GeneDirection = function(sig_cor_res, all_cor_res, count_mat, BH_thresh = 0.05) {
   # the results from all correlations are used to help assign direction using correlations that have a significant nominal pvalue
   
   # directional assignments are categorized into 3 levels: 
@@ -325,7 +326,7 @@ assignRegion2GeneDirection = function(sig_cor_res, all_cor_res, count_mat) {
     left_join(all_cor_res |> filter(link_label == "promoter_peak_to_gene") |> select(ensembl_gene_id, promoter_peak = regulatory_element, pp_r = r, pp_pval = P, pp_BH = BH), by = c("ensembl_gene_id", "target_id" = "promoter_peak")) |> 
     # add correlation results of regulatory peak itself to the gene. this will be helpful for assigning direction for peaks linked to promoter peaks that are not significantly correlated with gene expression
     left_join(all_cor_res |> filter(link_label %in% c("distal_peak_to_gene", "promoter_peak_to_gene")) |> select(ensembl_gene_id, distal_peak = regulatory_element, dp_r = r, dp_pval = P, dp_BH = BH), by = c("ensembl_gene_id", "regulatory_element" = "distal_peak")) |> 
-    mutate(cor_to_compare = case_when(pp_BH < 0.05 ~ "pp",
+    mutate(cor_to_compare = case_when(pp_BH < BH_thresh ~ "pp",
                                       dp_pval < pp_pval ~ "dp",
                                       TRUE ~ "pp"),
            r_comp = ifelse(cor_to_compare == "pp", pp_r, dp_r),
@@ -428,16 +429,18 @@ assignRegion2GeneDirection = function(sig_cor_res, all_cor_res, count_mat) {
 #' 
 #' Genes with a significant correlation with either a promoter or distal peak are retained and focused on further.
 #' @export
-processCorrelations = function(count_mat, cor_res, correlation_pairs, p2g_info) {
+processCorrelations = function(count_mat, cor_res, correlation_pairs, p2g_info, gene_inclusion_thresh = 0.05, BH_thresh = 0.05) {
   genes_with_sig_anno = cor_res |> 
-    filter((link_label %in% grep("to_gene$", levels(link_label), value = TRUE)) & (P < 0.01)) |> 
+    filter((link_label %in% grep("to_gene$", levels(link_label), value = TRUE)) & (BH < gene_inclusion_thresh)) |> 
     pull(ensembl_gene_id) |> 
     unique()
+  if (length(genes_with_sig_anno) == 0) stop("No significant peak to gene correlations detected.")
   sig_cor = cor_res |> 
     filter(ensembl_gene_id %in% genes_with_sig_anno) |> 
-    mutate(sig_cor = BH < 0.05) 
-  anno_cor_res = categorizeAndAnnotateCorrelationResults(sig_cor, p2g_info)
-  region2gene_dir = assignRegion2GeneDirection(anno_cor_res, cor_res, count_mat)
+    mutate(sig_cor = BH < BH_thresh) 
+  anno_cor_res = categorizeAndAnnotateCorrelationResults(sig_cor, p2g_info, BH_thresh = BH_thresh)
+  # return(anno_cor_res)
+  region2gene_dir = assignRegion2GeneDirection(anno_cor_res, cor_res, count_mat, BH_thresh = BH_thresh)
   sig_cor_res = anno_cor_res |> 
     left_join(region2gene_dir, by = c("ensembl_gene_id", "regulatory_element")) |> 
     relocate(ensembl_gene_id, regulatory_element, link_label, modality_pair, r, BH, dist_to_tss, starts_with("region2gene")) #|> 

@@ -4,7 +4,11 @@
 \alias{categorizeAndAnnotateCorrelationResults}
 \title{Annotation of genes that are significant and provide some additional downstream information for interpreting linked networks}
 \usage{
-categorizeAndAnnotateCorrelationResults(.sig_cor_genes, p2g_info)
+categorizeAndAnnotateCorrelationResults(
+  .sig_cor_genes,
+  p2g_info,
+  BH_thresh = 0.05
+)
 }
 \arguments{
 \item{.sig_cor_genes}{dataframe that includes genes with significant correlations}

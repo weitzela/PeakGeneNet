@@ -4,7 +4,7 @@
 \alias{editCorResFields}
 \title{Annotation of significant promoter peak information}
 \usage{
-editCorResFields(df)
+editCorResFields(df, BH_thresh = 0.05)
 }
 \arguments{
 \item{df}{the correlation results}
