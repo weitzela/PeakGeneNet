@@ -24,8 +24,11 @@ calculateDirectedDistance = function(subject, target) {
 createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome) {
   if (inherits(ensembl_ids, "matrix")) {
     # if provided a count matrix, detect whether the IDs of the count matrix are row names or column names
-    if (all(grepl("^ENS", rownames(ensembl_ids)))) ensembl_ids = rownames(ensembl_ids)
-    if (all(grepl("^ENS", colnames(ensembl_ids)))) ensembl_ids = colnames(ensembl_ids)
+    if (all(grepl("^ENS", rownames(ensembl_ids)))) {
+      ensembl_ids = rownames(ensembl_ids)
+    } else if (all(grepl("^ENS", colnames(ensembl_ids)))) {
+      ensembl_ids = colnames(ensembl_ids)
+    }
   } 
   stopifnot(inherits(ensembl_ids, "character"))
   ensembl_ids = unique(ensembl_ids)
