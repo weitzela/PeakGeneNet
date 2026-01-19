@@ -61,7 +61,7 @@ matrixCorrelation = function(mat1, mat2, type = c("pearson", "spearman"), rank_d
 
 #' Format input
 #' 
-#' This function pastes the modality at the end of each feature ID and then combines the matrices into one matrix object
+#' This function pastes the modality at the end of each feature ID and then combines the matrices into one matrix object. The matrices must have common sample IDs as the rownames to join by.
 #' @param gene_counts count matrix where rownames are sample IDs and colnames are feature ID
 #' @export
 formatMatrixForCorrelation = function(gene_counts, peak_counts) {
@@ -70,6 +70,11 @@ formatMatrixForCorrelation = function(gene_counts, peak_counts) {
   stopifnot(any(purrr::map_lgl(peak_counts, ~ inherits(.x, c("matrix", "numeric")))))
   count_mat = c(list(RNASeq = gene_counts), peak_counts) |> 
     purrr::imap(function(.mat, .modality) {
+      duplicated_features = duplicated(colnames(.mat))
+      if (any(duplicated_features)) {
+        message(sum(duplicated_features), " duplicated feature(s) from the ", .modality, " matrix removed, based on repeated column IDs.")
+        .mat = .mat[,!duplicated_features,drop=FALSE]
+      }
       colnames(.mat) = paste0(colnames(.mat), "_", .modality)
       .mat = as.data.frame(.mat) |> 
         tibble::rownames_to_column(var = "samp_id")
