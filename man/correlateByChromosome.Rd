@@ -6,7 +6,7 @@
 \usage{
 correlateByChromosome(
   count_mat,
-  all_pairs_df,
+  correlation_pairs,
   grp_contrast = NULL,
   rds_fn = NULL
 )
@@ -14,7 +14,7 @@ correlateByChromosome(
 \arguments{
 \item{count_mat}{numeric matrix with features as columns and samples as rows}
 
-\item{all_pairs_df}{dataframe supplying all pairs of features}
+\item{correlation_pairs}{dataframe supplying all pairs of features}
 
 \item{grp_contrast}{a way to filter to include samples from only certain groups}
 

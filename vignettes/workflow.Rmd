@@ -50,6 +50,34 @@ p2g_ls$p2g_info[1:5,] |> kableExtra::kable()
 p2g_ls$correlation_pairs[1:5,] |> kableExtra::kable()
 ```
 
+See how many relationships will be tested within each category.  
+```{r}
+p2g_ls$correlation_pairs |> 
+  select(-ensembl_gene_id) |> 
+  distinct() |> 
+  group_by(link_label, modality_pair) |> 
+  tally(name = "No. of Correlations") |> 
+  janitor::adorn_totals(where = c("row")) |> 
+  mutate(across(where(is.numeric), scales::comma)) |> 
+  kableExtra::kable()
+```
+
+Then, carry out and process the correlations using the following functions. The count matrices to for used as the input for the correlation analysis should have samples in rows and features in columns.
+```{r}
+peak_counts = map(peak_counts, function(.x) {
+  colnames(.x) = attr(.x, "samp")[colnames(.x), "samp_id"]
+  return(t(.x))
+})
+count_mat = formatMatrixForCorrelation(t(gene_counts), peak_counts)
+count_mat[1:5,1:5] |> kableExtra::kable()
+
+full_cor_res = correlateByChromosome(count_mat, p2g_ls$correlation_pairs)
+full_cor_res |> head(5) |> kableExtra::kable()
+
+processed_cor = processCorrelations(count_mat, full_cor_res, p2g_ls$correlation_pairs, p2g_ls$p2g_info)
+processed_cor |> head(5) |> kableExtra::kable()
+```
+
 ```{r}
 sessionInfo()
 ```
