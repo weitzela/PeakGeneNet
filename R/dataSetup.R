@@ -35,7 +35,7 @@ createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome) {
     GenomeInfoDb::`seqlevelsStyle<-`("UCSC")
   names(gene_gr) = gene_gr$ensembl_gene_id
   GenomeInfoDb::genome(gene_gr) = ucsc_genome
-  Seqinfo::seqinfo(gene_gr) = Seqinfo::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(gene_gr)) |> unique(),]
+  GenomeInfoDb::seqinfo(gene_gr) = GenomeInfoDb::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(gene_gr)) |> unique(),]
   
   promoter_gr = gene_gr |> 
     IRanges::promoters(upstream = 2000, downstream = 1000)
@@ -64,7 +64,7 @@ createPeakGr = function(peak_counts, ucsc_genome) {
     GenomicRanges::sort(ignore.strand = TRUE)
   names(peak_gr) = peak_gr$unique_id
   GenomeInfoDb::genome(peak_gr) = ucsc_genome
-  Seqinfo::seqinfo(peak_gr) = Seqinfo::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(peak_gr)) |> unique(),]
+  GenomeInfoDb::seqinfo(peak_gr) = GenomeInfoDb::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(peak_gr)) |> unique(),]
   return(peak_gr)
 }
 
