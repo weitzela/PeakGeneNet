@@ -146,7 +146,7 @@ full_cor_res = correlateByChromosome(count_mat, p2g_ls$correlation_pairs)
 #> Starting chr1
 #> 0.02 sec elapsed
 #> Starting chr2
-#> 0.324 sec elapsed
+#> 0.33 sec elapsed
 #> Starting chr3
 #> 0.007 sec elapsed
 #> Joining with `by = join_by(regulatory_element, target_id, link_label, chr,
