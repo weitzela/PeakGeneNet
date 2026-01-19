@@ -151,13 +151,13 @@ createPeak2GeneObjects = function(gene_counts, peak_counts, biomart_ensembl, ucs
     dplyr::mutate(chr = GenomeInfoDb::seqnames(subset(gene_gr, annotation == "TSS")[ensembl_gene_id]) |> as.character()) |>
     dplyr::mutate(chr = factor(chr, levels = gtools::mixedsort(unique(chr)))) |>
     dplyr::mutate(link_label = factor(link_label, levels = c("promoter_peak_to_gene", "distal_peak_to_gene", "distal_peak_to_promoter_peak", "promoter_peak_to_promoter_peak")))
-  # correlation_pairs = correlation_pairs |>
-  #   dplyr::mutate(re_modality = peak_gr[regulatory_element]$modality)
-  # dplyr::mutate(re_modality = removeStrAroundCharacter(regulatory_element, "_", "before"),
-  #               t_modality = removeStrAroundCharacter(target_id, "_", "before")) |>
-  #   dplyr::mutate(modality_pair = ifelse(re_modality < t_modality, paste0(re_modality, "-", t_modality), paste0(t_modality, "-", re_modality)),
-  #                 modality_pair = factor(modality_pair)) |>
-  #   dplyr::select(-c(re_modality, t_modality))
+  correlation_pairs = correlation_pairs |>
+    left_join(p2g_info |> select(unique_id, re_modality = modality), by = c("regulatory_element" = "unique_id")) |> 
+    left_join(p2g_info |> select(unique_id, t_modality = modality), by = c("target_id" = "unique_id")) |> 
+    mutate(across(ends_with("modality"), ~ ifelse(is.na(.x), "RNASeq", .x))) |> 
+    dplyr::mutate(modality_pair = ifelse(re_modality < t_modality, paste0(re_modality, "-", t_modality), paste0(t_modality, "-", re_modality)),
+                  modality_pair = factor(modality_pair)) |>
+    dplyr::select(-c(re_modality, t_modality))
   
   return(list(gene_gr = gene_gr, peak_gr = peak_gr, p2g_info = p2g_info, correlation_pairs = correlation_pairs))
 }
