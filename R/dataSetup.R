@@ -120,7 +120,7 @@ createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome) {
   # the tss_locus object is the one that spans 1Mb +/- the gene TSS, its promoter regions removed from it
   tss_locus = subset(gene_gr, annotation == "TSS") |>
     BiocGenerics::unstrand()
-  tss_locus = tss_locus + 1e6
+  suppressWarnings(tss_locus <- tss_locus + 1e6) 
   tss_locus = GenomicRanges::trim(tss_locus) # trim to length of chromosome if you have genome info set in the granges object
   tss_locus = GenomicRanges::split(tss_locus, tss_locus$ensembl_gene_id)
   tss_locus = GenomicRanges::setdiff(tss_locus, promoter_gr[names(tss_locus)], ignore.strand = TRUE) |>
@@ -180,8 +180,8 @@ createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome) {
     dplyr::mutate(chr = factor(chr, levels = gtools::mixedsort(unique(chr)))) |>
     dplyr::mutate(link_label = factor(link_label, levels = c("promoter_peak_to_gene", "distal_peak_to_gene", "distal_peak_to_promoter_peak", "promoter_peak_to_promoter_peak")))
   correlation_pairs = correlation_pairs |>
-    left_join(p2g_info |> select(unique_id, re_modality = modality), by = c("regulatory_element" = "unique_id")) |> 
-    left_join(p2g_info |> select(unique_id, t_modality = modality), by = c("target_id" = "unique_id")) |> 
+    left_join(p2g_info |> distinct(unique_id, re_modality = modality), by = c("regulatory_element" = "unique_id")) |> 
+    left_join(p2g_info |> distinct(unique_id, t_modality = modality), by = c("target_id" = "unique_id")) |> 
     mutate(across(ends_with("modality"), ~ ifelse(is.na(.x), "RNASeq", .x))) |> 
     dplyr::mutate(modality_pair = ifelse(re_modality < t_modality, paste0(re_modality, "-", t_modality), paste0(t_modality, "-", re_modality)),
                   modality_pair = factor(modality_pair)) |>
