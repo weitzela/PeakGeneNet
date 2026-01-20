@@ -146,9 +146,9 @@ full_cor_res = correlateByChromosome(count_mat, p2g_ls$correlation_pairs)
 #> Starting chr1
 #> 0.02 sec elapsed
 #> Starting chr2
-#> 0.326 sec elapsed
+#> 0.012 sec elapsed
 #> Starting chr3
-#> 0.006 sec elapsed
+#> 0.007 sec elapsed
 #> Joining with `by = join_by(regulatory_element, target_id, link_label, chr,
 #> modality_pair, r, n, P)`
 full_cor_res |> head(5) |> kableExtra::kable()
