@@ -58,12 +58,21 @@ createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome) {
 }
 
 createPeakGr = function(peaks, ucsc_genome) {
+  if (!inherits(peaks, "list")) {
+    stop("Peak regions must be input within a list. E.g., list(ATACSeq = c('chr1:1-2', 'chr1:4-7'), H3K4me1 = c('chr1:2-5', 'chr1:6-8'))")
+  }
   peak_gr = purrr::imap(peaks, function(.x, .y) {
     if (inherits(.x, "matrix")) {
-      if (all(grepl("^chr", rownames(.x), ignore.case = TRUE))) df = data.frame(region_id = rownames(.x))
-      if (all(grepl("^chr", colnames(.x), ignore.case = TRUE))) df = data.frame(region_id = colnames(.x))
-    } else {
+      if (all(grepl("^chr", rownames(.x), ignore.case = TRUE))) {
+        df = data.frame(region_id = rownames(.x))
+      }
+      if (all(grepl("^chr", colnames(.x), ignore.case = TRUE))) {
+        df = data.frame(region_id = colnames(.x))
+      }
+    } else if (inherits(.x, "character")) {
       df = data.frame(region_id = .x)
+    } else {
+      stop("Genomic regions not detected as character vector or matrix rows or column names.")
     }
     df = df |> 
       tidyr::separate_wider_delim(region_id, delim = stringr::regex("[:punct:]"), names = c("chr", "start", "end", "modality"), too_few = "align_start", cols_remove = FALSE) |> 
