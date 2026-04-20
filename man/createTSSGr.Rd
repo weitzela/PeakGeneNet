@@ -4,10 +4,20 @@
 \alias{createTSSGr}
 \title{Setup gene TSS object}
 \usage{
-createTSSGr(ensembl_ids, biomart_ensembl, ucsc_genome)
+createTSSGr(
+  ensembl_ids,
+  biomart_ensembl,
+  ucsc_genome,
+  promoter_upstream = 2000,
+  promoter_downstream = 1000
+)
 }
 \arguments{
 \item{ucsc_genome}{genome release formatting in ucsc style. For example: hg38, rn7, etc.}
+
+\item{promoter_upstream}{number of bases upstream of the TSS to include in the promoter window. Default: 2000.}
+
+\item{promoter_downstream}{number of bases downstream of the TSS to include in the promoter window. Default: 1000.}
 }
 \description{
 This creates a dataframe with canonical TSS for each gene that is included in the analysis

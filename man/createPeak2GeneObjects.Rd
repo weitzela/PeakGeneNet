@@ -5,12 +5,38 @@
 \title{Create Peak-Gene Links
 Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have \emph{unique} feature IDs.}
 \usage{
-createPeak2GeneObjects(genes, peaks, biomart_ensembl, ucsc_genome)
+createPeak2GeneObjects(
+  genes,
+  peaks,
+  biomart_ensembl,
+  ucsc_genome,
+  promoter_upstream = 2000,
+  promoter_downstream = 1000,
+  require_promoter_peak = TRUE,
+  promoter_modalities = c("H3K27ac", "H3K4me3", "ATACSeq"),
+  modality_max_dist = c(H3K4me3 = 10000),
+  locus_radius = 1e+06,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{genes}{either a character vector of ensembl IDs or a matrix with the row or column names as the ensembl IDs}
 
 \item{peaks}{a named list of character vectors containing renomic region. Genomic regions should begin with "chr". The list can also contain count matrices, where row names or column names are genomic regions.}
+
+\item{promoter_upstream}{number of bases upstream of the TSS defining the promoter window. Default: 2000.}
+
+\item{promoter_downstream}{number of bases downstream of the TSS defining the promoter window. Default: 1000.}
+
+\item{require_promoter_peak}{if TRUE (default), genes with no overlapping promoter peaks are excluded. If FALSE, genes with no promoter peaks are retained as long as they have at least one distal peak; only distal_peak_to_gene links are generated for such genes.}
+
+\item{promoter_modalities}{character vector of modality names whose peaks are eligible to be classified as promoter peaks based on overlap with the promoter window. Default: c("H3K27ac", "H3K4me3", "ATACSeq").}
+
+\item{modality_max_dist}{named numeric vector specifying a maximum absolute distance from the TSS (in bp) for peaks of a given modality. Peaks exceeding the threshold for their modality are excluded from p2g_info. Names must match modality names in the peaks input. Default: c(H3K4me3 = 1e4).}
+
+\item{locus_radius}{radius in bp around each TSS defining the distal peak search window (promoter region is excluded from this window). Default: 1e6.}
+
+\item{verbose}{if TRUE (default), prints a summary of link and gene counts after construction. If fewer than 30\% of queried genes produce any link, also prints the dist_to_tss percentile distribution to help diagnose window width.}
 }
 \description{
 Create Peak-Gene Links

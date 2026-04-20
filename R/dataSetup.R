@@ -18,10 +18,13 @@ calculateDirectedDistance = function(subject, target) {
 #' 
 #' This creates a dataframe with canonical TSS for each gene that is included in the analysis
 #' @param ucsc_genome genome release formatting in ucsc style. For example: hg38, rn7, etc.
+#' @param promoter_upstream number of bases upstream of the TSS to include in the promoter window. Default: 2000.
+#' @param promoter_downstream number of bases downstream of the TSS to include in the promoter window. Default: 1000.
 #' @examples
 #' # createTSSObject(c("ENSR00129", "ENSR00139"), biomaRt::useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl", version = 105), "hg38")
 #' @keywords internal
-createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome) {
+createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome,
+                       promoter_upstream = 2000, promoter_downstream = 1000) {
   if (inherits(ensembl_ids, "matrix")) {
     # if provided a count matrix, detect whether the IDs of the count matrix are row names or column names
     if (all(grepl("^ENS", rownames(ensembl_ids)))) {
@@ -49,7 +52,7 @@ createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome) {
   GenomeInfoDb::seqinfo(gene_gr) = GenomeInfoDb::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(gene_gr)) |> unique(),]
   
   promoter_gr = gene_gr |> 
-    IRanges::promoters(upstream = 2000, downstream = 1000)
+    IRanges::promoters(upstream = promoter_upstream, downstream = promoter_downstream)
   promoter_gr$annotation = "Promoter"
   
   gene_gr = c(gene_gr, promoter_gr) |> 
@@ -93,6 +96,13 @@ createPeakGr = function(peaks, ucsc_genome) {
 #' Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have *unique* feature IDs.
 #' @param genes either a character vector of ensembl IDs or a matrix with the row or column names as the ensembl IDs
 #' @param peaks a named list of character vectors containing renomic region. Genomic regions should begin with "chr". The list can also contain count matrices, where row names or column names are genomic regions.
+#' @param promoter_upstream number of bases upstream of the TSS defining the promoter window. Default: 2000.
+#' @param promoter_downstream number of bases downstream of the TSS defining the promoter window. Default: 1000.
+#' @param require_promoter_peak if TRUE (default), genes with no overlapping promoter peaks are excluded. If FALSE, genes with no promoter peaks are retained as long as they have at least one distal peak; only distal_peak_to_gene links are generated for such genes.
+#' @param promoter_modalities character vector of modality names whose peaks are eligible to be classified as promoter peaks based on overlap with the promoter window. Default: c("H3K27ac", "H3K4me3", "ATACSeq").
+#' @param modality_max_dist named numeric vector specifying a maximum absolute distance from the TSS (in bp) for peaks of a given modality. Peaks exceeding the threshold for their modality are excluded from p2g_info. Names must match modality names in the peaks input. Default: c(H3K4me3 = 1e4).
+#' @param locus_radius radius in bp around each TSS defining the distal peak search window (promoter region is excluded from this window). Default: 1e6.
+#' @param verbose if TRUE (default), prints a summary of link and gene counts after construction. If fewer than 30% of queried genes produce any link, also prints the dist_to_tss percentile distribution to help diagnose window width.
 #' @export
 #' @examples
 #' # genes = c("ENSRNOG00000000008", "ENSRNOG00000000082", "ENSRNOG00000001489")
@@ -102,11 +112,20 @@ createPeakGr = function(peaks, ucsc_genome) {
 #'      )
 #' # createPeak2GeneObjects(genes, peaks, biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109), "rn7")
 #' 
-createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome) {
-  gene_gr = createTSSGr(genes, biomart_ensembl, ucsc_genome)
+createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome,
+                                  promoter_upstream = 2000, promoter_downstream = 1000,
+                                  require_promoter_peak = TRUE,
+                                  promoter_modalities = c("H3K27ac", "H3K4me3", "ATACSeq"),
+                                  modality_max_dist = c(H3K4me3 = 1e4),
+                                  locus_radius = 1e6,
+                                  verbose = TRUE) {
+  gene_gr = createTSSGr(
+    genes, biomart_ensembl, ucsc_genome,
+    promoter_upstream = promoter_upstream, promoter_downstream = promoter_downstream
+  )
   peak_gr = createPeakGr(peaks, ucsc_genome)
   
-  promoter_options = subset(peak_gr, modality %in% c("H3K27ac", "H3K4me3", "ATACSeq"))
+  promoter_options = subset(peak_gr, modality %in% promoter_modalities)
   promoter_locus = subset(gene_gr, annotation == "Promoter")
   promoter_olaps = GenomicRanges::findOverlaps(promoter_options, promoter_locus)
   promoter_peaks = promoter_options[promoter_olaps@from]
@@ -117,10 +136,10 @@ createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome) {
   promoter_gr = subset(gene_gr, annotation == "Promoter") |>
     GenomicRanges::split(~ ensembl_gene_id)
   
-  # the tss_locus object is the one that spans 1Mb +/- the gene TSS, its promoter regions removed from it
+  # tss_locus spans locus_radius +/- the TSS, with the promoter region removed
   tss_locus = subset(gene_gr, annotation == "TSS") |>
     BiocGenerics::unstrand()
-  suppressWarnings(tss_locus <- tss_locus + 1e6) 
+  suppressWarnings(tss_locus <- tss_locus + locus_radius)
   tss_locus = GenomicRanges::trim(tss_locus) # trim to length of chromosome if you have genome info set in the granges object
   tss_locus = GenomicRanges::split(tss_locus, tss_locus$ensembl_gene_id)
   tss_locus = GenomicRanges::setdiff(tss_locus, promoter_gr[names(tss_locus)], ignore.strand = TRUE) |>
@@ -154,21 +173,41 @@ createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome) {
     dplyr::mutate(promoter_peak = FALSE) |>
     dplyr::bind_rows(promoter_peaks_for_p2g_info) |>
     dplyr::arrange(ensembl_gene_id) |>
-    # remove H3K4me3 connections that are too far away from the promoter region and would not be expected biologically
-    dplyr::filter(!((modality == "H3K4me3") & (abs(dist_to_tss) > 1e4)))
+    dplyr::filter(is.na(modality_max_dist[modality]) | abs(dist_to_tss) <= modality_max_dist[modality])
   
   correlation_pairs = split(p2g_info, p2g_info$ensembl_gene_id) |>
     purrr::imap(function(.df, .gene) {
       promoter_peaks = dplyr::filter(.df, promoter_peak) |> dplyr::pull(unique_id)
-      if (length(promoter_peaks) == 0) return(NULL)
       other_peaks = dplyr::filter(.df, !promoter_peak) |> dplyr::pull(unique_id)
-      region_combinations = expand.grid(c(other_peaks, promoter_peaks), promoter_peaks) |>
-        dplyr::mutate(dplyr::across(dplyr::everything(), as.character)) |>
-        dplyr::filter(!(as.character(Var1) == Var2)) |>
-        dplyr::mutate(link_label = ifelse(Var1 %in% promoter_peaks, "promoter_peak_to_promoter_peak", "distal_peak_to_promoter_peak")) |>
-        dplyr::bind_rows(data.frame(Var1 = promoter_peaks, Var2 = paste0(.gene, "_RNASeq"), link_label = "promoter_peak_to_gene"))
+      if (require_promoter_peak && length(promoter_peaks) == 0) return(NULL)
+      if (length(promoter_peaks) == 0 && length(other_peaks) == 0) return(NULL)
+      region_combinations = data.frame()
+      if (length(promoter_peaks) > 0) {
+        region_combinations = expand.grid(
+          c(other_peaks, promoter_peaks), promoter_peaks
+        ) |>
+          dplyr::mutate(dplyr::across(dplyr::everything(), as.character)) |>
+          dplyr::filter(!(as.character(Var1) == Var2)) |>
+          dplyr::mutate(link_label = ifelse(
+            Var1 %in% promoter_peaks,
+            "promoter_peak_to_promoter_peak",
+            "distal_peak_to_promoter_peak"
+          )) |>
+          dplyr::bind_rows(data.frame(
+            Var1 = promoter_peaks,
+            Var2 = paste0(.gene, "_RNASeq"),
+            link_label = "promoter_peak_to_gene"
+          ))
+      }
       if (length(other_peaks) > 0) {
-        region_combinations = dplyr::bind_rows(region_combinations, data.frame(Var1 = c(other_peaks), Var2 = paste0(.gene, "_RNASeq"), link_label = "distal_peak_to_gene"))
+        region_combinations = dplyr::bind_rows(
+          region_combinations,
+          data.frame(
+            Var1 = other_peaks,
+            Var2 = paste0(.gene, "_RNASeq"),
+            link_label = "distal_peak_to_gene"
+          )
+        )
       }
       region_combinations = region_combinations |>
         dplyr::rename("regulatory_element" = "Var1", "target_id" = "Var2")
@@ -187,7 +226,55 @@ createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome) {
                   modality_pair = factor(modality_pair)) |>
     dplyr::select(-c(re_modality, t_modality))
   
-  return(list(gene_gr = gene_gr, peak_gr = peak_gr, p2g_info = p2g_info, correlation_pairs = correlation_pairs))
+  n_queried = length(unique(subset(gene_gr, annotation == "TSS")$ensembl_gene_id))
+  n_any_peak = length(unique(p2g_info$ensembl_gene_id))
+  n_promoter_peak = length(unique(
+    dplyr::filter(p2g_info, promoter_peak)$ensembl_gene_id
+  ))
+  n_linked = length(unique(correlation_pairs$ensembl_gene_id))
+
+  links_by_label = table(correlation_pairs$link_label)
+  links_by_modality = table(correlation_pairs$modality_pair)
+
+  stats = list(
+    n_genes_queried        = n_queried,
+    n_genes_any_peak       = n_any_peak,
+    n_genes_promoter_peak  = n_promoter_peak,
+    n_genes_linked         = n_linked,
+    links_by_label         = links_by_label,
+    links_by_modality_pair = links_by_modality
+  )
+
+  if (verbose) {
+    message(sprintf(
+      "Genes queried: %d | with any peak in locus: %d | with promoter peak: %d | linked: %d",
+      n_queried, n_any_peak, n_promoter_peak, n_linked
+    ))
+    message("Links by type:")
+    message(paste(sprintf("  %-40s %d", names(links_by_label), as.integer(links_by_label)), collapse = "\n"))
+    message("Links by modality pair:")
+    message(paste(sprintf("  %-40s %d", names(links_by_modality), as.integer(links_by_modality)), collapse = "\n"))
+
+    if (n_linked / n_queried < 0.5) {
+      message(sprintf(
+        "\nWarning: only %.0f%% of queried genes produced links. Consider adjusting promoter_upstream/promoter_downstream/locus_radius.",
+        100 * n_linked / n_queried
+      ))
+      message("dist_to_tss percentiles across all peaks in p2g_info:")
+      pcts = quantile(abs(p2g_info$dist_to_tss), probs = c(0.05, 0.25, 0.5, 0.75, 0.95), na.rm = TRUE)
+      message(paste(sprintf("  p%-2s: %d bp", names(pcts), as.integer(pcts)), collapse = "\n"))
+      stats$dist_to_tss_percentiles = pcts
+    }
+  }
+
+  result = list(
+    gene_gr = gene_gr,
+    peak_gr = peak_gr,
+    p2g_info = p2g_info,
+    correlation_pairs = correlation_pairs
+  )
+  attr(result, "stats") = stats
+  return(result)
 }
 
 #' Use of matrix functions to adjust data via linear model
