@@ -2,7 +2,7 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{matrixCorrelation}
 \alias{matrixCorrelation}
-\title{Correlation of two matrices for more efficient calculations}
+\title{Compute pairwise correlations between two aligned matrices}
 \usage{
 matrixCorrelation(
   mat1,
@@ -13,22 +13,32 @@ matrixCorrelation(
 )
 }
 \arguments{
-\item{mat1}{first matrix of data to correlate}
+\item{mat1}{Numeric matrix. Features as columns, samples as rows.}
 
-\item{mat2}{must have same dimensions as mat1}
+\item{mat2}{Numeric matrix. Must have the same dimensions as \code{mat1} and the
+same row order (samples aligned).}
 
-\item{type}{method of correlation}
+\item{type}{Correlation method: \code{"pearson"} or \code{"spearman"}. Spearman is
+used throughout the PeakGeneNet pipeline. Default: \code{"pearson"}.}
 
-\item{rank_data}{logical}
+\item{rank_data}{Logical. If \code{TRUE}, columns are rank-transformed before
+correlation regardless of \code{type}. When \code{type = "spearman"} this is done
+automatically; set \code{rank_data = TRUE} to force ranking with
+\code{type = "pearson"}. Default: \code{FALSE}.}
 
-\item{return_pvalue}{default=TRUE}
+\item{return_pvalue}{Logical. If \code{TRUE} (default), p-values are computed
+from the t-statistic and appended as column \code{P}. P-values for Spearman
+match \code{Hmisc::rcorr()} but differ from \code{cor.test()} due to a different
+test-statistic formula.}
 }
 \value{
-A dataframe with five columns containing the pairs of data that were correlated, the correlation coefficient, p-value, and number of samples included in the correlation.
+A data frame with columns \code{var1}, \code{var2} (column names of \code{mat1}
+and \code{mat2}), \code{r} (correlation coefficient), \code{n} (number of non-missing
+sample pairs), and \code{P} (p-value, if \code{return_pvalue = TRUE}).
 }
 \description{
-Correlation of two matrices for more efficient calculations
-}
-\examples{
-# example code
+Correlates column \code{i} of \code{mat1} against column \code{i} of \code{mat2} for all \code{i},
+returning results in a single vectorised pass rather than looping over
+individual pairs. This is substantially faster than calling \code{cor()} or
+\code{cor.test()} in a loop when there are thousands of peak–gene pairs.
 }

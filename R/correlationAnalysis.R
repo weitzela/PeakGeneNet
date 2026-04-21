@@ -1,24 +1,34 @@
-#' Correlation of two matrices for more efficient calculations
-#' 
-#' @param mat1 first matrix of data to correlate
-#' @param mat2 must have same dimensions as mat1
-#' @param type method of correlation
-#' @param rank_data logical 
-#' @param return_pvalue default=TRUE
-#' @return A dataframe with five columns containing the pairs of data that were correlated, the correlation coefficient, p-value, and number of samples included in the correlation.
+#' Compute pairwise correlations between two aligned matrices
+#'
+#' Correlates column `i` of `mat1` against column `i` of `mat2` for all `i`,
+#' returning results in a single vectorised pass rather than looping over
+#' individual pairs. This is substantially faster than calling `cor()` or
+#' `cor.test()` in a loop when there are thousands of peak–gene pairs.
+#'
+#' @param mat1 Numeric matrix. Features as columns, samples as rows.
+#' @param mat2 Numeric matrix. Must have the same dimensions as `mat1` and the
+#'   same row order (samples aligned).
+#' @param type Correlation method: `"pearson"` or `"spearman"`. Spearman is
+#'   used throughout the PeakGeneNet pipeline. Default: `"pearson"`.
+#' @param rank_data Logical. If `TRUE`, columns are rank-transformed before
+#'   correlation regardless of `type`. When `type = "spearman"` this is done
+#'   automatically; set `rank_data = TRUE` to force ranking with
+#'   `type = "pearson"`. Default: `FALSE`.
+#' @param return_pvalue Logical. If `TRUE` (default), p-values are computed
+#'   from the t-statistic and appended as column `P`. P-values for Spearman
+#'   match `Hmisc::rcorr()` but differ from `cor.test()` due to a different
+#'   test-statistic formula.
+#'
+#' @return A data frame with columns `var1`, `var2` (column names of `mat1`
+#'   and `mat2`), `r` (correlation coefficient), `n` (number of non-missing
+#'   sample pairs), and `P` (p-value, if `return_pvalue = TRUE`).
 #' @export
-#' @examples
-#' # example code
 matrixCorrelation = function(mat1, mat2, type = c("pearson", "spearman"), rank_data = FALSE, return_pvalue = TRUE) {
-  # mat_ls = list of matrices to conduct pairwise correlation on
-  # room for improvement: 
-  # - check for same dimensions of matrices
-  
   # example of test to compare calculations are accurate:
   # test = matrixCorrelation(counts[,vars1], counts[,vars2])
   # test2 = rcorr(counts)
   # test3 = test |> rowwise() |> mutate(r_compare = test2$r[var1, var2], p_compare = test2$P[var1, var2])
-  
+
   type = match.arg(type)
   
   mat1[is.na(mat2)] = NA
@@ -59,10 +69,26 @@ matrixCorrelation = function(mat1, mat2, type = c("pearson", "spearman"), rank_d
   return(results_df)
 }
 
-#' Format input
-#' 
-#' This function pastes the modality at the end of each feature ID and then combines the matrices into one matrix object. The matrices must have common sample IDs as the rownames to join by.
-#' @param gene_counts count matrix where rownames are sample IDs and colnames are feature ID
+#' Combine gene and peak count matrices into a single matrix for correlation
+#'
+#' Appends the modality name to each feature ID (e.g. `"ENSRNOG00000000008"`
+#' becomes `"ENSRNOG00000000008_RNASeq"`, and peak IDs gain their modality
+#' suffix) and then joins all matrices on shared sample IDs. The resulting
+#' combined matrix is the `count_mat` input expected by
+#' [correlateByChromosome()].
+#'
+#' @param gene_counts Numeric matrix of gene expression counts with sample IDs
+#'   as row names and Ensembl gene IDs as column names. Input matrices should
+#'   be transformed (e.g., VST, log, or inverse-rank normalisation) before
+#'   calling this function.
+#' @param peak_counts A named list of numeric peak count matrices, each with
+#'   sample IDs as row names and peak region IDs as column names. Names must
+#'   match the modality labels used in [createPeak2GeneObjects()]. Input
+#'   matrices should be transformed consistently with `gene_counts`.
+#'
+#' @return A single numeric matrix with samples as rows and all features
+#'   (genes and peaks, modality-suffixed) as columns. Samples present in only
+#'   a subset of matrices will have `NA` values for missing modalities.
 #' @export
 formatMatrixForCorrelation = function(gene_counts, peak_counts) {
   stopifnot(inherits(gene_counts, c("matrix", "numeric")))
@@ -86,26 +112,65 @@ formatMatrixForCorrelation = function(gene_counts, peak_counts) {
   return(count_mat)
 }
 
-#' A wrapper function to carry out correlations in smaller chunks to help save on memory
-#' 
-#' @param count_mat numeric matrix with features as columns and samples as rows
-#' @param correlation_pairs dataframe supplying all pairs of features
-#' @param grp_contrast a way to filter to include samples from only certain groups
-#' @param rds_fn filename to save the output to for future access
-#' @return a dataframe of full results
+#' Run Spearman correlations for all peak–gene pairs, chromosome by chromosome
+#'
+#' Iterates over chromosomes, correlating each `regulatory_element`–`target_id`
+#' pair in `correlation_pairs` using [matrixCorrelation()]. Large chromosomes
+#' are processed in chunks of 2 million pairs to limit peak memory use. After
+#' all correlations are computed, BH-adjusted p-values are calculated within
+#' groups defined by `link_label` × `modality_pair` — these groups define the
+#' exchangeable family for multiple testing correction.
+#'
+#' @param count_mat Numeric matrix returned by [formatMatrixForCorrelation()]:
+#'   samples as rows, modality-suffixed feature IDs as columns.
+#' @param correlation_pairs Data frame returned by [createPeak2GeneObjects()]:
+#'   must have columns `ensembl_gene_id`, `regulatory_element`, `target_id`,
+#'   `link_label`, `chr`, and `modality_pair`.
+#' @param grp_contrast Optional character string specifying a contrast used to
+#'   subset samples before correlating (e.g. `"treatment_A_vs_B"`). When
+#'   provided, the function looks up matching samples from a `sample_info` data
+#'   frame in the global environment via `formatContrastNames()`. Default:
+#'   `NULL` (all samples in `count_mat` are used).
+#' @param rds_fn Optional file path. If provided, the raw correlation results
+#'   (before joining back to `correlation_pairs`) are saved with `saveRDS()`
+#'   for later retrieval. Default: `NULL`.
+#'
+#' @return A data frame with one row per `regulatory_element`–`target_id` pair
+#'   per gene. Columns:
+#'   \describe{
+#'     \item{`ensembl_gene_id`}{Ensembl gene ID for the gene this link belongs
+#'       to.}
+#'     \item{`regulatory_element`}{Unique peak ID (`unique_id` from
+#'       [createPeak2GeneObjects()]) of the peak acting as the regulatory
+#'       element.}
+#'     \item{`target_id`}{ID of the correlation target: either a peak
+#'       `unique_id` (for peak–peak links) or an Ensembl gene ID suffixed with
+#'       `"_RNASeq"` (for peak–gene links).}
+#'     \item{`link_label`}{Factor indicating the link type. One of
+#'       `"promoter_peak_to_gene"`, `"distal_peak_to_gene"`,
+#'       `"distal_peak_to_promoter_peak"`, `"promoter_peak_to_promoter_peak"`.}
+#'     \item{`chr`}{Chromosome of the gene TSS.}
+#'     \item{`modality_pair`}{Factor. Hyphen-separated modality labels for the
+#'       regulatory element and target, alphabetically ordered
+#'       (e.g. `"ATACSeq-RNASeq"`). Used to define the multiple-testing
+#'       correction groups.}
+#'     \item{`r`}{Spearman correlation coefficient.}
+#'     \item{`n`}{Number of sample pairs used in the correlation (non-missing
+#'       observations).}
+#'     \item{`P`}{Nominal (unadjusted) p-value.}
+#'     \item{`BH`}{FDR-adjusted p-value (Benjamini–Hochberg), corrected within
+#'       each `link_label`–`modality_pair` group.}
+#'   }
 #' @export
 correlateByChromosome = function(count_mat, correlation_pairs, grp_contrast = NULL, rds_fn = NULL) {
-  # correlation_pairs is a dataframe with the following columns: ensembl_gene_id, reegulatory element, target_id, link_label, chr, modality_pair
-  # split pairs by chromosome to and create distinct list of region pairs to correlate
-  chr_pair_ls = correlation_pairs |> select(-any_of(c("ensembl_gene_id"))) |> 
-    distinct() |> 
+  chr_pair_ls = correlation_pairs |> select(-any_of(c("ensembl_gene_id"))) |>
+    distinct() |>
     (\(x) split(x, x$chr))()
   if (!is.null(grp_contrast)) {
-    # for acute exercise groups, only include the samples present in the comparison groups
     contrast_var = str_remove_all(grp_contrast, "_.*$")
     groups_compared = formatContrastNames(grp_contrast, "")
-    samples_to_retain = .GlobalEnv$sample_info |> 
-      filter(!!rlang::sym(contrast_var) %in% groups_compared) |> 
+    samples_to_retain = .GlobalEnv$sample_info |>
+      filter(!!rlang::sym(contrast_var) %in% groups_compared) |>
       pull(samp_id)
     if (!all(rownames(count_mat) %in% samples_to_retain)) {
       count_mat = count_mat[samples_to_retain,]
@@ -154,9 +219,26 @@ correlateByChromosome = function(count_mat, correlation_pairs, grp_contrast = NU
   return(full_cor_res)
 }
 
-#' Annotation of significant promoter peak information
-#' @param df the correlation results
-#' @return an annotated dataframe 
+#' Annotate whether each link's associated promoter peak is significantly correlated with its gene
+#'
+#' Adds a `prom_peak_sig_cor_w_gene` column to `df`. The flag indicates
+#' whether the promoter peak involved in a given link has a significant
+#' `promoter_peak_to_gene` correlation (BH < `BH_thresh`) *within the same
+#' input data frame*. This is used in two ways downstream:
+#' (1) on the BH-filtered results to identify `distal_peak_to_promoter_peak`
+#' links where the promoter anchor is also significantly connected to gene
+#' expression, supporting the full distal → promoter → gene chain; and
+#' (2) on the broader significant-gene set to identify cases where a
+#' distal→promoter link exists but the promoter peak itself is NOT
+#' significantly correlated with the gene (`distal_no_promoter` annotation).
+#'
+#' @param df A correlation results data frame containing columns
+#'   `ensembl_gene_id`, `regulatory_element`, `target_id`, `link_label`, and
+#'   `BH`.
+#' @param BH_thresh FDR threshold used to determine whether a
+#'   `promoter_peak_to_gene` link is significant. Default: `0.05`.
+#'
+#' @return `df` with an additional logical column `prom_peak_sig_cor_w_gene`.
 editCorResFields = function(df, BH_thresh = 0.05) {
   sig_promoter_peaks = df |> 
     filter(BH < BH_thresh, link_label == "promoter_peak_to_gene") |> 
@@ -171,10 +253,35 @@ editCorResFields = function(df, BH_thresh = 0.05) {
   return(df)
 }
 
-#' Annotation of genes that are significant and provide some additional downstream information for interpreting linked networks
-#' @param .sig_cor_genes dataframe that includes genes with significant correlations
-#' @param p2g_info dataframe
-#' @return an annotated dataframe
+#' Categorise and annotate significant correlation results
+#'
+#' Filters to BH-significant links, joins `dist_to_tss` from `p2g_info`, and
+#' adds two interpretive columns:
+#' \describe{
+#'   \item{`prom_peak_sig_cor_w_gene`}{`TRUE` if the link involves a promoter
+#'     peak with a significant `promoter_peak_to_gene` correlation, or if the
+#'     distal peak is correlated with both the gene and such a promoter peak —
+#'     indicating the full distal → promoter → gene chain is supported.}
+#'   \item{`distal_no_promoter`}{`TRUE` for distal peaks that are significantly
+#'     correlated with both the gene and a proximal promoter peak, but whose
+#'     associated promoter peak is itself *not* significantly correlated with
+#'     gene expression. These represent distal regulatory candidates that bypass
+#'     the expected promoter anchor.}
+#' }
+#' Column descriptions are also stored in an `"info"` attribute on the
+#' returned data frame for reference.
+#'
+#' @param .sig_cor_genes Data frame of correlation results for genes that have
+#'   at least one significant peak-to-gene link (output of the gene-inclusion
+#'   filter in [processCorrelations()]). Must contain all link types for those
+#'   genes, not just significant ones.
+#' @param p2g_info The `p2g_info` data frame from [createPeak2GeneObjects()],
+#'   used to join `dist_to_tss` onto the results.
+#' @param BH_thresh FDR threshold for defining significance. Default: `0.05`.
+#'
+#' @return A BH-filtered data frame with `dist_to_tss`, `prom_peak_sig_cor_w_gene`,
+#'   and `distal_no_promoter` columns added, and an `"info"` attribute
+#'   containing column descriptions.
 categorizeAndAnnotateCorrelationResults = function(.sig_cor_genes, p2g_info, BH_thresh = 0.05) {
   sig_cor_res = .sig_cor_genes |> 
     filter(BH < BH_thresh) |> 
@@ -213,17 +320,37 @@ categorizeAndAnnotateCorrelationResults = function(.sig_cor_genes, p2g_info, BH_
   return(sig_cor_res)
 }
 
-#' Iteration of correlations between distal peaks and other peaks residing near it with significant relationships with said gene
-#' @param df dataframe of significant correlation results
-#' @param full_cor_df dataframe of full correlation results
-#' @param count_mat matrix of counts supplied to correlation analysis
-#' @return dataframe with correlation results for that particular iteration
+#' Assign direction to ambiguous peaks by correlating with well-anchored distal peaks
+#'
+#' For peaks whose direction of association with gene expression cannot be
+#' determined directly ("disclude" in `region2gene_dir`), attempts to infer a
+#' direction by correlating each ambiguous peak against the most significantly
+#' gene-linked distal peak for the same gene. If the two peaks are
+#' significantly correlated (p < 0.05) the direction is inferred transitively:
+#' a positive correlation with a positively-associated distal peak implies a
+#' positive association with the gene, and vice versa.
+#'
+#' One call handles a single iteration — the `n`th-most-significant distal
+#' anchor per gene. [corWithDistalPeak_wrapper()] calls this iteratively until
+#' no "disclude" peaks remain or the iteration limit is reached.
+#'
+#' @param df Data frame of significant correlation results with a
+#'   `region2gene_dir` column (values: `"pos"`, `"neg"`, `"disclude"`,
+#'   `"drop"`).
+#' @param full_cor_df The same data frame passed to the first call of this
+#'   function — used as a stable reference of significant correlations for
+#'   selecting the `n`th-best anchor. Should not be updated between iterations.
+#' @param count_mat The combined count matrix from [formatMatrixForCorrelation()].
+#' @param iter Integer. Which rank of distal anchor peak to use for this
+#'   iteration (1 = most significant). Default: `1`.
+#' @param iter_batch_cutoff Integer. Below this iteration the function takes
+#'   the single `iter`th peak; at or above it, all remaining candidates are
+#'   evaluated together to limit memory use. Increase if the correlation matrix
+#'   consumes too much memory. Default: `5`.
+#'
+#' @return `df` with updated `region2gene_dir` values and an `iter_n` column
+#'   recording which iteration resolved each peak.
 corWithDistalPeak = function(df, full_cor_df, count_mat, iter = 1, iter_batch_cutoff = 5) {
-  # peakUD = peak with an unknown direction of association with the gene itself.
-  # for a peak with an unknown direction of association with a gene (peakUD), assign a direction based on the correlation between peakUD (that is likely linked to a promoter peak) and other distal peaks that are most significantly linked to the gene expression. the direction of the peakUD to gene is assigned based on the direction of correlation with the distal peak with a more confident directional assignment
-  # if iter = 1, peakUD will be correlated with the distal peak that returns the most significant relationship with the gene in question. however, peakUD may not be significantly (pval < 0.05) correlated with the top distal region associated with the gene. in that case, the function should be iterated to the next 'n' peaks until it finds a region that peak UD significantly correlates with. The function should be iterated to until no more correlation options exist.
-  # full_cor_df = df BEFORE the first iteration of this function. this should only include significant (BH < 0.05) correlations
-  # increase the batch cutoff if the correlation matrix at that point consumes too much memory
   df_disclude = df |> 
     filter(region2gene_dir == "disclude")
   most_sig_peak_per_gene = full_cor_df |> 
@@ -277,17 +404,29 @@ corWithDistalPeak = function(df, full_cor_df, count_mat, iter = 1, iter_batch_cu
   return(df)
 }
 
-#' Wrapper function for corWithDistalPeak to iterate through the correlations
-#' @param full_cor_df dataframe of full correlation results
-#' @param count_mat matrix of counts supplied to correlation analysis
-#' @param v logical. print informative messages
-#' @return dataframe with iterated correlation results until a significant correlation was identified with other distal peaks
+#' Iteratively resolve ambiguous peak–gene direction assignments
+#'
+#' Calls [corWithDistalPeak()] in a loop, advancing the anchor rank by one
+#' each iteration, until no peaks remain labeled `"disclude"` or 20 iterations
+#' are reached. Called as Step 3 of [assignRegion2GeneDirection()] to salvage
+#' directional assignments for peaks that could not be resolved through the
+#' promoter-peak and direct distal-gene correlation routes.
+#'
+#' @param full_cor_df Data frame with a `region2gene_dir` column, passed
+#'   as-is to each [corWithDistalPeak()] call as the stable reference.
+#' @param count_mat The combined count matrix from [formatMatrixForCorrelation()].
+#' @param v Logical. If `TRUE` (default), prints per-iteration summaries of
+#'   `region2gene_dir` value counts.
+#' @param .iter_batch_cutoff Passed to [corWithDistalPeak()]. Default: `5`.
+#'
+#' @return `full_cor_df` with `region2gene_dir` updated and an `iter_n` column
+#'   recording which iteration resolved each previously ambiguous peak.
 corWithDistalPeak_wrapper = function(full_cor_df, count_mat, v = TRUE, .iter_batch_cutoff = 5) {
   df = full_cor_df
   i = 1
   n_discluded = df |> filter(region2gene_dir == "disclude") |> nrow()
   if (n_discluded == 0) return(df |> filter(region2gene_dir == "disclude") |> mutate(iter_n = NA))
-  if (v) message("### Correlating ambiguous peaks with other distal peaks assocaited with gene ###\npre fxn: ", df$region2gene_dir |> table() |> (\(x) paste0(names(x), ":\t", scales::comma(as.numeric(x)), collapse = "\t"))())
+  if (v) message("### Correlating ambiguous peaks with other distal peaks associated with gene ###\npre fxn: ", df$region2gene_dir |> table() |> (\(x) paste0(names(x), ":\t", scales::comma(as.numeric(x)), collapse = "\t"))())
   while ((n_discluded > 0) & i < 20) {
     df = corWithDistalPeak(df, full_cor_df, count_mat, i, iter_batch_cutoff = .iter_batch_cutoff)
     if (v) message("round ", i, ":\t", df$region2gene_dir |> table() |> (\(x) paste0(names(x), ": ", scales::comma(as.numeric(x)), collapse = "\t"))())
@@ -297,27 +436,52 @@ corWithDistalPeak_wrapper = function(full_cor_df, count_mat, v = TRUE, .iter_bat
   return(df)
 }
 
-#' The results from all correlations are used to help assign direction using correlations that have a significant nominal pvalue
-#' 
-#' Directional assignments are categorized into 3 levels: 
-#' 1) Most confident: assign direction using FDR significant links and they are all in agreement
-#' 2) Directional disagreement existed, but decision was made by taking the most significant FDR
-#' 3) Directional disagreement existed, but decision was made by taking most significant nominal pvalue that was included in comparison
-#' 4) These are looser directions associated with the gene - neither distal or promoter region is nominally correlated with the gene, so the direction is based on how that peak is associated with distal peaks that are significantly linked to the gene with high confidence. The iteration of identifying a significant correlation between the peak and another distal peak is divided by 1000 and then added to 4. This shows that the peak:gene relationship exists at confidence level #4, and notes how many distal genes it had to try to correlate with before finding a significant (pval < 0.05) connection.
-#' @param sig_cor_res dataframe with the significant results to annotate link direction
-#' @param all_cor_res all resulting correlations
-#' @param count_mat matrix of counts supplied to correlation analysis
-#' @return dataframe with peak-gene link annotation directions with the degree of confidence 
+#' Assign directional sign and confidence score to each peak–gene link
+#'
+#' Consolidates all peak–gene relationships into a consensus direction
+#' (`"pos"` or `"neg"`) using a prioritised four-tier approach. The full
+#' correlation table (including non-significant pairs) is used so that nominal
+#' p-values can inform directionality even when FDR thresholds are not met.
+#'
+#' **Tier 1 (highest confidence):** Direction is assigned from FDR-significant
+#' links. Nominal p-values (< 0.05) are used to break ties when more than one
+#' link type contributes directional evidence. All peak–gene directions are in
+#' agreement.
+#'
+#' **Tier 2:** For links with conflicting directional evidence where all
+#' contributing links are FDR-significant, the direction from the most
+#' FDR-significant link is honored. For example, if the distal peak→gene and
+#' distal peak→promoter peak→gene paths disagree, the FDR values of those two
+#' link types are compared and the more significant one wins.
+#'
+#' **Tier 3:** For links with conflicting direction where not all links meet
+#' FDR significance, the direction with the most nominally significant
+#' p-value (< 0.05) is honored, following the same logic as Tier 2.
+#'
+#' **Tier 4:** For peaks where the distal peak→promoter peak link is
+#' FDR-significant but neither the promoter peak→gene nor distal peak→gene
+#' correlations reach nominal significance (p < 0.05), direction is inferred
+#' by correlating the ambiguous peak against other peaks already confidently
+#' linked to the gene (FDR < 0.05). The most FDR-significant anchors are
+#' tried first. The confidence score is `4 + (iter / 1000)`, where `iter` is
+#' the rank of the anchor peak that produced a significant (p < 0.05)
+#' correlation. Tier 4 links are considered lower confidence.
+#'
+#' @param sig_cor_res Data frame of annotated significant correlations from
+#'   [categorizeAndAnnotateCorrelationResults()].
+#' @param all_cor_res The full correlation results data frame (all tested
+#'   pairs, not filtered by significance) from [correlateByChromosome()].
+#'   Nominal p-values from this table are used for directional inference when
+#'   FDR-significant evidence is unavailable.
+#' @param count_mat The combined count matrix from [formatMatrixForCorrelation()],
+#'   used for the iterative correlation step (Tier 4).
+#' @param BH_thresh FDR threshold defining significance. Default: `0.05`.
+#'
+#' @return A data frame with columns `ensembl_gene_id`, `regulatory_element`,
+#'   `region2gene_dir` (`"pos"`, `"neg"`, or `"drop"`), and `region2gene_conf`
+#'   (numeric confidence tier as described above).
 #' @export
 assignRegion2GeneDirection = function(sig_cor_res, all_cor_res, count_mat, BH_thresh = 0.05) {
-  # the results from all correlations are used to help assign direction using correlations that have a significant nominal pvalue
-  
-  # directional assignments are categorized into 3 levels: 
-  ### 1) Most confident: assign direction using FDR significant links and they are all in agreement
-  ### 2) Directional disagreement existed, but decision was made by taking the most significant FDR
-  ### 3) Directional disagreement existed, but decision was made by taking most significant nominal pvalue that was included in comparison
-  ### 4) These are looser directions associated with the gene - neither distal or promoter region is nominally correlated with the gene, so the direction is based on how that peak is associated with distal peaks that are significantly linked to the gene with high confidence. The iteration of identifying a significant correlation between the peak and another distal peak is divided by 1000 and then added to 4. This shows that the peak:gene relationship exists at confidence level #4, and notes how many distal genes it had to try to correlate with before finding a significant (pval < 0.05) connection.  
-  
   #### Step 1: Assign initial relationships based on most accessible information available ####
   full_dir_df = sig_cor_res |> 
     # work with the important info to assign direction
@@ -425,9 +589,59 @@ assignRegion2GeneDirection = function(sig_cor_res, all_cor_res, count_mat, BH_th
   return(region2gene_dir_df)
 }
 
-#' Process correlation results
-#' 
-#' Genes with a significant correlation with either a promoter or distal peak are retained and focused on further.
+#' Filter, annotate, and assign directionality to significant peak–gene correlations
+#'
+#' Orchestrates the post-correlation processing pipeline: retains genes with
+#' at least one significant peak-to-gene link, annotates the full regulatory
+#' chain context for each link via [categorizeAndAnnotateCorrelationResults()],
+#' and assigns a directional sign and confidence tier to every link via
+#' [assignRegion2GeneDirection()].
+#'
+#' @param count_mat The combined count matrix from [formatMatrixForCorrelation()].
+#' @param cor_res The full correlation results data frame from
+#'   [correlateByChromosome()] (all tested pairs, not pre-filtered).
+#' @param correlation_pairs The `correlation_pairs` data frame from
+#'   [createPeak2GeneObjects()]. Currently unused in the function body but
+#'   retained for potential downstream use.
+#' @param p2g_info The `p2g_info` data frame from [createPeak2GeneObjects()],
+#'   used to join `dist_to_tss` onto results.
+#' @param gene_inclusion_thresh FDR threshold used to determine which genes
+#'   are included in further processing: a gene must have at least one
+#'   peak-to-gene link (any link ending in `_to_gene`) with BH below this
+#'   threshold. Default: `0.05`.
+#' @param BH_thresh FDR threshold used for significance within the annotation
+#'   and directional assignment steps. Default: `0.05`.
+#'
+#' @return A data frame filtered to BH-significant links for genes with at
+#'   least one significant peak-to-gene correlation. Contains all columns from
+#'   [correlateByChromosome()] plus the following:
+#'   \describe{
+#'     \item{`dist_to_tss`}{Signed distance (bp) from the regulatory element
+#'       to the gene TSS, joined from [createPeak2GeneObjects()]. Negative =
+#'       upstream, positive = downstream (strand-aware; see
+#'       [calculateDirectedDistance()]).}
+#'     \item{`prom_peak_sig_cor_w_gene`}{Logical. `TRUE` if the promoter peak
+#'       involved in this link has a significant (`BH < BH_thresh`)
+#'       `promoter_peak_to_gene` correlation for this gene. Also `TRUE` for
+#'       distal peaks significantly correlated with both the gene and such a
+#'       promoter peak, indicating the full distal → promoter → gene chain is
+#'       supported. Set by [categorizeAndAnnotateCorrelationResults()].}
+#'     \item{`distal_no_promoter`}{Logical. `TRUE` for distal peaks that are
+#'       significantly correlated with both the gene and a promoter peak, but
+#'       whose associated promoter peak is itself not significantly correlated
+#'       with gene expression. These links lack a supported promoter anchor.
+#'       Set by [categorizeAndAnnotateCorrelationResults()].}
+#'     \item{`region2gene_dir`}{Consensus direction of the peak's association
+#'       with gene expression: `"pos"` (positive), `"neg"` (negative), or
+#'       `"drop"` (direction could not be resolved). Assigned by
+#'       [assignRegion2GeneDirection()].}
+#'     \item{`region2gene_conf`}{Numeric confidence tier (1–4+) from
+#'       [assignRegion2GeneDirection()]. Tiers 1–3 reflect decreasing
+#'       evidentiary strength from FDR-significant agreement down to nominal
+#'       p-value arbitration. Tier 4+ links required iterative correlation
+#'       with other distal peaks to infer direction and are generally excluded
+#'       from downstream motif analyses.}
+#'   }
 #' @export
 processCorrelations = function(count_mat, cor_res, correlation_pairs, p2g_info, gene_inclusion_thresh = 0.05, BH_thresh = 0.05) {
   genes_with_sig_anno = cor_res |> 
@@ -443,7 +657,8 @@ processCorrelations = function(count_mat, cor_res, correlation_pairs, p2g_info, 
   region2gene_dir = assignRegion2GeneDirection(anno_cor_res, cor_res, count_mat, BH_thresh = BH_thresh)
   sig_cor_res = anno_cor_res |> 
     left_join(region2gene_dir, by = c("ensembl_gene_id", "regulatory_element")) |> 
-    relocate(ensembl_gene_id, regulatory_element, link_label, modality_pair, r, BH, dist_to_tss, starts_with("region2gene")) #|> 
+    relocate(ensembl_gene_id, regulatory_element, link_label, modality_pair, r, BH, dist_to_tss, starts_with("region2gene")) |> 
+    select(-sig_cor)
     # filter(region2gene_dir != "drop")
   return(sig_cor_res)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{corWithDistalPeak_wrapper}
 \alias{corWithDistalPeak_wrapper}
-\title{Wrapper function for corWithDistalPeak to iterate through the correlations}
+\title{Iteratively resolve ambiguous peak–gene direction assignments}
 \usage{
 corWithDistalPeak_wrapper(
   full_cor_df,
@@ -12,15 +12,24 @@ corWithDistalPeak_wrapper(
 )
 }
 \arguments{
-\item{full_cor_df}{dataframe of full correlation results}
+\item{full_cor_df}{Data frame with a \code{region2gene_dir} column, passed
+as-is to each \code{\link[=corWithDistalPeak]{corWithDistalPeak()}} call as the stable reference.}
 
-\item{count_mat}{matrix of counts supplied to correlation analysis}
+\item{count_mat}{The combined count matrix from \code{\link[=formatMatrixForCorrelation]{formatMatrixForCorrelation()}}.}
 
-\item{v}{logical. print informative messages}
+\item{v}{Logical. If \code{TRUE} (default), prints per-iteration summaries of
+\code{region2gene_dir} value counts.}
+
+\item{.iter_batch_cutoff}{Passed to \code{\link[=corWithDistalPeak]{corWithDistalPeak()}}. Default: \code{5}.}
 }
 \value{
-dataframe with iterated correlation results until a significant correlation was identified with other distal peaks
+\code{full_cor_df} with \code{region2gene_dir} updated and an \code{iter_n} column
+recording which iteration resolved each previously ambiguous peak.
 }
 \description{
-Wrapper function for corWithDistalPeak to iterate through the correlations
+Calls \code{\link[=corWithDistalPeak]{corWithDistalPeak()}} in a loop, advancing the anchor rank by one
+each iteration, until no peaks remain labeled \code{"disclude"} or 20 iterations
+are reached. Called as Step 3 of \code{\link[=assignRegion2GeneDirection]{assignRegion2GeneDirection()}} to salvage
+directional assignments for peaks that could not be resolved through the
+promoter-peak and direct distal-gene correlation routes.
 }

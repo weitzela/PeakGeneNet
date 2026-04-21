@@ -2,13 +2,30 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{formatMatrixForCorrelation}
 \alias{formatMatrixForCorrelation}
-\title{Format input}
+\title{Combine gene and peak count matrices into a single matrix for correlation}
 \usage{
 formatMatrixForCorrelation(gene_counts, peak_counts)
 }
 \arguments{
-\item{gene_counts}{count matrix where rownames are sample IDs and colnames are feature ID}
+\item{gene_counts}{Numeric matrix of gene expression counts with sample IDs
+as row names and Ensembl gene IDs as column names. Input matrices should
+be transformed (e.g., VST, log, or inverse-rank normalisation) before
+calling this function.}
+
+\item{peak_counts}{A named list of numeric peak count matrices, each with
+sample IDs as row names and peak region IDs as column names. Names must
+match the modality labels used in \code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}}. Input
+matrices should be transformed consistently with \code{gene_counts}.}
+}
+\value{
+A single numeric matrix with samples as rows and all features
+(genes and peaks, modality-suffixed) as columns. Samples present in only
+a subset of matrices will have \code{NA} values for missing modalities.
 }
 \description{
-This function pastes the modality at the end of each feature ID and then combines the matrices into one matrix object. The matrices must have common sample IDs as the rownames to join by.
+Appends the modality name to each feature ID (e.g. \code{"ENSRNOG00000000008"}
+becomes \code{"ENSRNOG00000000008_RNASeq"}, and peak IDs gain their modality
+suffix) and then joins all matrices on shared sample IDs. The resulting
+combined matrix is the \code{count_mat} input expected by
+\code{\link[=correlateByChromosome]{correlateByChromosome()}}.
 }

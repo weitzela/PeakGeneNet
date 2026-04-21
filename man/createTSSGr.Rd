@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataSetup.R
 \name{createTSSGr}
 \alias{createTSSGr}
-\title{Setup gene TSS object}
+\title{Build a GRanges object of canonical gene TSSs and their promoter windows}
 \usage{
 createTSSGr(
   ensembl_ids,
@@ -13,14 +13,34 @@ createTSSGr(
 )
 }
 \arguments{
-\item{ucsc_genome}{genome release formatting in ucsc style. For example: hg38, rn7, etc.}
+\item{ensembl_ids}{A character vector of Ensembl gene IDs (e.g.
+\code{"ENSRNOG00000000008"}), or a matrix whose row names or column names are
+Ensembl gene IDs.}
 
-\item{promoter_upstream}{number of bases upstream of the TSS to include in the promoter window. Default: 2000.}
+\item{biomart_ensembl}{A \code{Mart} object returned by
+\code{biomaRt::useEnsembl()} pointing to the appropriate organism and Ensembl
+version (e.g. \code{biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109)}).}
 
-\item{promoter_downstream}{number of bases downstream of the TSS to include in the promoter window. Default: 1000.}
+\item{ucsc_genome}{UCSC genome assembly name (e.g. \code{"rn7"}, \code{"hg38"}).
+Used to populate \code{seqinfo} on the returned object.}
+
+\item{promoter_upstream}{Number of bases upstream of the TSS to include in
+the promoter window. Default: \code{2000}.}
+
+\item{promoter_downstream}{Number of bases downstream of the TSS to include
+in the promoter window. Default: \code{1000}.}
+}
+\value{
+A sorted \code{GRanges} object with one TSS entry and one Promoter entry
+per gene. Metadata columns: \code{ensembl_gene_id}, \code{annotation} (\code{"TSS"} or
+\code{"Promoter"}). Names are set to \code{ensembl_gene_id} for TSS entries.
 }
 \description{
-This creates a dataframe with canonical TSS for each gene that is included in the analysis
+Queries Ensembl via \code{biomaRt} for the canonical TSS of each requested gene
+and returns a \code{GRanges} object containing two annotation types per gene: the
+point-width TSS (\code{annotation == "TSS"}) and the flanking promoter window
+(\code{annotation == "Promoter"}). Only autosomes (chromosomes 1–22) are
+retained. Seqlevels are set to UCSC style (e.g. \code{"chr1"}).
 }
 \examples{
 # createTSSObject(c("ENSR00129", "ENSR00139"), biomaRt::useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl", version = 105), "hg38")
