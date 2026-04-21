@@ -4,12 +4,7 @@
 \alias{correlateByChromosome}
 \title{Run Spearman correlations for all peak–gene pairs, chromosome by chromosome}
 \usage{
-correlateByChromosome(
-  count_mat,
-  correlation_pairs,
-  grp_contrast = NULL,
-  rds_fn = NULL
-)
+correlateByChromosome(count_mat, correlation_pairs, rds_fn = NULL)
 }
 \arguments{
 \item{count_mat}{Numeric matrix returned by \code{\link[=formatMatrixForCorrelation]{formatMatrixForCorrelation()}}:
@@ -18,12 +13,6 @@ samples as rows, modality-suffixed feature IDs as columns.}
 \item{correlation_pairs}{Data frame returned by \code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}}:
 must have columns \code{ensembl_gene_id}, \code{regulatory_element}, \code{target_id},
 \code{link_label}, \code{chr}, and \code{modality_pair}.}
-
-\item{grp_contrast}{Optional character string specifying a contrast used to
-subset samples before correlating (e.g. \code{"treatment_A_vs_B"}). When
-provided, the function looks up matching samples from a \code{sample_info} data
-frame in the global environment via \code{formatContrastNames()}. Default:
-\code{NULL} (all samples in \code{count_mat} are used).}
 
 \item{rds_fn}{Optional file path. If provided, the raw correlation results
 (before joining back to \code{correlation_pairs}) are saved with \code{saveRDS()}

@@ -126,11 +126,6 @@ formatMatrixForCorrelation = function(gene_counts, peak_counts) {
 #' @param correlation_pairs Data frame returned by [createPeak2GeneObjects()]:
 #'   must have columns `ensembl_gene_id`, `regulatory_element`, `target_id`,
 #'   `link_label`, `chr`, and `modality_pair`.
-#' @param grp_contrast Optional character string specifying a contrast used to
-#'   subset samples before correlating (e.g. `"treatment_A_vs_B"`). When
-#'   provided, the function looks up matching samples from a `sample_info` data
-#'   frame in the global environment via `formatContrastNames()`. Default:
-#'   `NULL` (all samples in `count_mat` are used).
 #' @param rds_fn Optional file path. If provided, the raw correlation results
 #'   (before joining back to `correlation_pairs`) are saved with `saveRDS()`
 #'   for later retrieval. Default: `NULL`.
@@ -162,21 +157,10 @@ formatMatrixForCorrelation = function(gene_counts, peak_counts) {
 #'       each `link_label`–`modality_pair` group.}
 #'   }
 #' @export
-correlateByChromosome = function(count_mat, correlation_pairs, grp_contrast = NULL, rds_fn = NULL) {
+correlateByChromosome = function(count_mat, correlation_pairs, rds_fn = NULL) {
   chr_pair_ls = correlation_pairs |> select(-any_of(c("ensembl_gene_id"))) |>
     distinct() |>
     (\(x) split(x, x$chr))()
-  if (!is.null(grp_contrast)) {
-    contrast_var = str_remove_all(grp_contrast, "_.*$")
-    groups_compared = formatContrastNames(grp_contrast, "")
-    samples_to_retain = .GlobalEnv$sample_info |>
-      filter(!!rlang::sym(contrast_var) %in% groups_compared) |>
-      pull(samp_id)
-    if (!all(rownames(count_mat) %in% samples_to_retain)) {
-      count_mat = count_mat[samples_to_retain,]
-      message("Filtered samples retain ", nrow(count_mat), " samples present in contrast ", grp_contrast)
-    }
-  }
   # carry out correlation
   cor_results = imap(chr_pair_ls, function(.df, .chr) {
     message("Starting ", .chr)
