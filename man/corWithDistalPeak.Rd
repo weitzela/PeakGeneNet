@@ -2,20 +2,44 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{corWithDistalPeak}
 \alias{corWithDistalPeak}
-\title{Iteration of correlations between distal peaks and other peaks residing near it with significant relationships with said gene}
+\title{Assign direction to ambiguous peaks by correlating with well-anchored distal peaks}
 \usage{
 corWithDistalPeak(df, full_cor_df, count_mat, iter = 1, iter_batch_cutoff = 5)
 }
 \arguments{
-\item{df}{dataframe of significant correlation results}
+\item{df}{Data frame of significant correlation results with a
+\code{region2gene_dir} column (values: \code{"pos"}, \code{"neg"}, \code{"disclude"},
+\code{"drop"}).}
 
-\item{full_cor_df}{dataframe of full correlation results}
+\item{full_cor_df}{The same data frame passed to the first call of this
+function — used as a stable reference of significant correlations for
+selecting the \code{n}th-best anchor. Should not be updated between iterations.}
 
-\item{count_mat}{matrix of counts supplied to correlation analysis}
+\item{count_mat}{The combined count matrix from \code{\link[=formatMatrixForCorrelation]{formatMatrixForCorrelation()}}.}
+
+\item{iter}{Integer. Which rank of distal anchor peak to use for this
+iteration (1 = most significant). Default: \code{1}.}
+
+\item{iter_batch_cutoff}{Integer. Below this iteration the function takes
+the single \code{iter}th peak; at or above it, all remaining candidates are
+evaluated together to limit memory use. Increase if the correlation matrix
+consumes too much memory. Default: \code{5}.}
 }
 \value{
-dataframe with correlation results for that particular iteration
+\code{df} with updated \code{region2gene_dir} values and an \code{iter_n} column
+recording which iteration resolved each peak.
 }
 \description{
-Iteration of correlations between distal peaks and other peaks residing near it with significant relationships with said gene
+For peaks whose direction of association with gene expression cannot be
+determined directly ("disclude" in \code{region2gene_dir}), attempts to infer a
+direction by correlating each ambiguous peak against the most significantly
+gene-linked distal peak for the same gene. If the two peaks are
+significantly correlated (p < 0.05) the direction is inferred transitively:
+a positive correlation with a positively-associated distal peak implies a
+positive association with the gene, and vice versa.
+}
+\details{
+One call handles a single iteration — the \code{n}th-most-significant distal
+anchor per gene. \code{\link[=corWithDistalPeak_wrapper]{corWithDistalPeak_wrapper()}} calls this iteratively until
+no "disclude" peaks remain or the iteration limit is reached.
 }

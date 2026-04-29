@@ -2,7 +2,7 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{categorizeAndAnnotateCorrelationResults}
 \alias{categorizeAndAnnotateCorrelationResults}
-\title{Annotation of genes that are significant and provide some additional downstream information for interpreting linked networks}
+\title{Categorise and annotate significant correlation results}
 \usage{
 categorizeAndAnnotateCorrelationResults(
   .sig_cor_genes,
@@ -11,13 +11,35 @@ categorizeAndAnnotateCorrelationResults(
 )
 }
 \arguments{
-\item{.sig_cor_genes}{dataframe that includes genes with significant correlations}
+\item{.sig_cor_genes}{Data frame of correlation results for genes that have
+at least one significant peak-to-gene link (output of the gene-inclusion
+filter in \code{\link[=processCorrelations]{processCorrelations()}}). Must contain all link types for those
+genes, not just significant ones.}
 
-\item{p2g_info}{dataframe}
+\item{p2g_info}{The \code{p2g_info} data frame from \code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}},
+used to join \code{dist_to_tss} onto the results.}
+
+\item{BH_thresh}{FDR threshold for defining significance. Default: \code{0.05}.}
 }
 \value{
-an annotated dataframe
+A BH-filtered data frame with \code{dist_to_tss}, \code{prom_peak_sig_cor_w_gene},
+and \code{distal_no_promoter} columns added, and an \code{"info"} attribute
+containing column descriptions.
 }
 \description{
-Annotation of genes that are significant and provide some additional downstream information for interpreting linked networks
+Filters to BH-significant links, joins \code{dist_to_tss} from \code{p2g_info}, and
+adds two interpretive columns:
+\describe{
+\item{\code{prom_peak_sig_cor_w_gene}}{\code{TRUE} if the link involves a promoter
+peak with a significant \code{promoter_peak_to_gene} correlation, or if the
+distal peak is correlated with both the gene and such a promoter peak —
+indicating the full distal → promoter → gene chain is supported.}
+\item{\code{distal_no_promoter}}{\code{TRUE} for distal peaks that are significantly
+correlated with both the gene and a proximal promoter peak, but whose
+associated promoter peak is itself \emph{not} significantly correlated with
+gene expression. These represent distal regulatory candidates that bypass
+the expected promoter anchor.}
+}
+Column descriptions are also stored in an \code{"info"} attribute on the
+returned data frame for reference.
 }

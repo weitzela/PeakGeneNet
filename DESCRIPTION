@@ -10,8 +10,15 @@ Authors@R: c(
       comment = c(ORCID = "0000-0002-7615-6357")
     )
   )
-Description: This package identifies distal regulatory links to gene expression through correlation of all possible peak connections within 1Mb of the genes TSS.
-    Four link types are considered: distal peaks to promomoter peaks, distal peaks to genes, promoter peaks to promoter peaks, and promoter peaks to genes.
+Description: Links epigenomic peaks to gene expression through empirical
+    Spearman correlation across multi-omic samples. Unlike annotation tools
+    that assign peaks to the nearest gene, PeakGeneNet tests all peak–gene
+    pairs within a configurable locus window (default 1 Mb) and applies
+    FDR correction within biologically defined groups. Four link types are
+    assessed: promoter peaks to genes, distal peaks to genes, distal peaks
+    to promoter peaks, and promoter peaks to promoter peaks. Designed for
+    multi-omic datasets integrating ATAC-seq, CUT&Tag, and RNA-seq, with
+    support for any organism and genome build available through Ensembl.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

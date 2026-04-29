@@ -2,19 +2,112 @@
 % Please edit documentation in R/dataSetup.R
 \name{createPeak2GeneObjects}
 \alias{createPeak2GeneObjects}
-\title{Create Peak-Gene Links
-Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have \emph{unique} feature IDs.}
+\title{Set up peak-to-gene link objects for correlation analysis}
 \usage{
-createPeak2GeneObjects(genes, peaks, biomart_ensembl, ucsc_genome)
+createPeak2GeneObjects(
+  genes,
+  peaks,
+  biomart_ensembl,
+  ucsc_genome,
+  promoter_upstream = 2000,
+  promoter_downstream = 1000,
+  require_promoter_peak = TRUE,
+  promoter_modalities = c("H3K27ac", "H3K4me3", "ATACSeq"),
+  modality_max_dist = c(H3K4me3 = 10000),
+  locus_radius = 1e+06,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{genes}{either a character vector of ensembl IDs or a matrix with the row or column names as the ensembl IDs}
+\item{genes}{A character vector of Ensembl gene IDs, or a count matrix
+whose row names or column names are Ensembl gene IDs.}
 
-\item{peaks}{a named list of character vectors containing renomic region. Genomic regions should begin with "chr". The list can also contain count matrices, where row names or column names are genomic regions.}
+\item{peaks}{A named list of peak inputs. Each element may be a character
+vector of genomic region strings (e.g. \code{"chr1:1000-2000"}) or a count
+matrix with genomic regions as row or column names. List names are used as
+modality labels and must match the expected modality name strings exactly.}
+
+\item{biomart_ensembl}{A \code{Mart} object from \code{biomaRt::useEnsembl()} for
+the target organism and Ensembl version (e.g.
+\code{biomaRt::useEnsembl(biomart = "genes", dataset = "rnorvegicus_gene_ensembl", version = 109)}).}
+
+\item{ucsc_genome}{UCSC genome assembly name (e.g. \code{"rn7"}, \code{"hg38"}).}
+
+\item{promoter_upstream}{Number of bases upstream of the TSS defining the
+promoter window. Default: \code{2000}.}
+
+\item{promoter_downstream}{Number of bases downstream of the TSS defining
+the promoter window. Default: \code{1000}.}
+
+\item{require_promoter_peak}{If \code{TRUE} (default), genes with no overlapping
+promoter peaks are excluded entirely. If \code{FALSE}, such genes are retained
+and receive only \code{distal_peak_to_gene} links; the standard four-link
+topology is not available for these genes because there is no proximal
+regulatory anchor.}
+
+\item{promoter_modalities}{Character vector of modality names whose peaks
+are eligible to be classified as promoter peaks based on overlap with the
+promoter window. Default: \code{c("H3K27ac", "H3K4me3", "ATACSeq")}.}
+
+\item{modality_max_dist}{Named numeric vector specifying a hard maximum
+absolute distance from the TSS (in bp) for peaks of a given modality.
+Peaks beyond this threshold are excluded from \code{p2g_info} even if they
+fall within \code{locus_radius}. Default: \code{c(H3K4me3 = 1e4)}. The H3K4me3
+default reflects the biology: H3K4me3 is a promoter-restricted histone
+mark and distal H3K4me3 signal is generally considered artifactual.}
+
+\item{locus_radius}{Radius in bp around each TSS defining the distal peak
+search window (the promoter region is excluded from this window). Default:
+\code{1e6}.}
+
+\item{verbose}{If \code{TRUE} (default), prints a summary of gene and link counts
+after construction. If fewer than 50\% of queried genes produce any link,
+also prints \code{dist_to_tss} percentiles to help diagnose whether window
+parameters need adjustment.}
+}
+\value{
+A named list with four elements and a \code{stats} attribute:
+\describe{
+\item{\code{gene_gr}}{\code{GRanges} of TSS and promoter window entries for all
+queried genes (output of \code{\link[=createTSSGr]{createTSSGr()}}). Used internally for overlap
+detection; useful for visualisation.}
+\item{\code{peak_gr}}{\code{GRanges} of all input peaks across all modalities
+(output of \code{\link[=createPeakGr]{createPeakGr()}}). The \code{promoter_peak} metadata column
+indicates whether each peak overlaps any gene's promoter window.}
+\item{\code{p2g_info}}{Data frame linking each peak to every gene whose locus
+it falls in. Columns include \code{unique_id}, \code{region_id}, \code{modality},
+\code{ensembl_gene_id}, \code{dist_to_tss} (signed, see
+\code{\link[=calculateDirectedDistance]{calculateDirectedDistance()}}), and \code{promoter_peak}. This table
+carries the distance and promoter-peak metadata used for interpreting
+correlation results.}
+\item{\code{correlation_pairs}}{Data frame enumerating every peak–target pair
+to be correlated, with columns \code{ensembl_gene_id},
+\code{regulatory_element}, \code{target_id}, \code{link_label}, \code{chr}, and
+\code{modality_pair}. This is the primary input to
+\code{\link[=correlateByChromosome]{correlateByChromosome()}}.}
+}
+The \code{stats} attribute is a list of gene and link count summaries (and
+optionally \code{dist_to_tss} percentiles if the yield was low).
 }
 \description{
-Create Peak-Gene Links
-Set up genomicranges objects for the data included in the correlation analysis. Data matrices must have \emph{unique} feature IDs.
+The primary setup function for the PeakGeneNet pipeline. For each gene,
+peaks within the promoter window are designated as \emph{promoter peaks} and
+peaks within \code{locus_radius} of the TSS (outside the promoter window) are
+designated as \emph{distal peaks}. Four link types are enumerated:
+\code{promoter_peak_to_gene}, \code{distal_peak_to_gene},
+\code{distal_peak_to_promoter_peak}, and \code{promoter_peak_to_promoter_peak}.
+}
+\details{
+The four link types form a topology that ensures every distal regulatory
+hypothesis is anchored through a proximal element. When
+\code{require_promoter_peak = FALSE} this topology is reduced for genes without
+promoter peaks: only \code{distal_peak_to_gene} links are generated, and those
+links lack a promoter-peak anchor — interpret them with caution.
+
+\strong{Modality naming:} modality names in \code{peaks} must match the strings used
+internally (\code{"ATACSeq"}, \code{"H3K27ac"}, \code{"H3K4me1"}, \code{"H3K4me3"}) exactly,
+including capitalisation. Mismatches will silently bypass modality-specific
+filters (e.g. \code{promoter_modalities}, \code{modality_max_dist}).
 }
 \examples{
 # genes = c("ENSRNOG00000000008", "ENSRNOG00000000082", "ENSRNOG00000001489")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{assignRegion2GeneDirection}
 \alias{assignRegion2GeneDirection}
-\title{The results from all correlations are used to help assign direction using correlations that have a significant nominal pvalue}
+\title{Assign directional sign and confidence score to each peak–gene link}
 \usage{
 assignRegion2GeneDirection(
   sig_cor_res,
@@ -12,21 +12,52 @@ assignRegion2GeneDirection(
 )
 }
 \arguments{
-\item{sig_cor_res}{dataframe with the significant results to annotate link direction}
+\item{sig_cor_res}{Data frame of annotated significant correlations from
+\code{\link[=categorizeAndAnnotateCorrelationResults]{categorizeAndAnnotateCorrelationResults()}}.}
 
-\item{all_cor_res}{all resulting correlations}
+\item{all_cor_res}{The full correlation results data frame (all tested
+pairs, not filtered by significance) from \code{\link[=correlateByChromosome]{correlateByChromosome()}}.
+Nominal p-values from this table are used for directional inference when
+FDR-significant evidence is unavailable.}
 
-\item{count_mat}{matrix of counts supplied to correlation analysis}
+\item{count_mat}{The combined count matrix from \code{\link[=formatMatrixForCorrelation]{formatMatrixForCorrelation()}},
+used for the iterative correlation step (Tier 4).}
+
+\item{BH_thresh}{FDR threshold defining significance. Default: \code{0.05}.}
 }
 \value{
-dataframe with peak-gene link annotation directions with the degree of confidence
+A data frame with columns \code{ensembl_gene_id}, \code{regulatory_element},
+\code{region2gene_dir} (\code{"pos"}, \code{"neg"}, or \code{"drop"}), and \code{region2gene_conf}
+(numeric confidence tier as described above).
 }
 \description{
-Directional assignments are categorized into 3 levels:
-\enumerate{
-\item Most confident: assign direction using FDR significant links and they are all in agreement
-\item Directional disagreement existed, but decision was made by taking the most significant FDR
-\item Directional disagreement existed, but decision was made by taking most significant nominal pvalue that was included in comparison
-\item These are looser directions associated with the gene - neither distal or promoter region is nominally correlated with the gene, so the direction is based on how that peak is associated with distal peaks that are significantly linked to the gene with high confidence. The iteration of identifying a significant correlation between the peak and another distal peak is divided by 1000 and then added to 4. This shows that the peak:gene relationship exists at confidence level #4, and notes how many distal genes it had to try to correlate with before finding a significant (pval < 0.05) connection.
+Consolidates all peak–gene relationships into a consensus direction
+(\code{"pos"} or \code{"neg"}) using a prioritised four-tier approach. The full
+correlation table (including non-significant pairs) is used so that nominal
+p-values can inform directionality even when FDR thresholds are not met.
 }
+\details{
+\strong{Tier 1 (highest confidence):} Direction is assigned from FDR-significant
+links. Nominal p-values (< 0.05) are used to break ties when more than one
+link type contributes directional evidence. All peak–gene directions are in
+agreement.
+
+\strong{Tier 2:} For links with conflicting directional evidence where all
+contributing links are FDR-significant, the direction from the most
+FDR-significant link is honored. For example, if the distal peak→gene and
+distal peak→promoter peak→gene paths disagree, the FDR values of those two
+link types are compared and the more significant one wins.
+
+\strong{Tier 3:} For links with conflicting direction where not all links meet
+FDR significance, the direction with the most nominally significant
+p-value (< 0.05) is honored, following the same logic as Tier 2.
+
+\strong{Tier 4:} For peaks where the distal peak→promoter peak link is
+FDR-significant but neither the promoter peak→gene nor distal peak→gene
+correlations reach nominal significance (p < 0.05), direction is inferred
+by correlating the ambiguous peak against other peaks already confidently
+linked to the gene (FDR < 0.05). The most FDR-significant anchors are
+tried first. The confidence score is \code{4 + (iter / 1000)}, where \code{iter} is
+the rank of the anchor peak that produced a significant (p < 0.05)
+correlation. Tier 4 links are considered lower confidence.
 }

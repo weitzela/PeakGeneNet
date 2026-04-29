@@ -2,7 +2,7 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{processCorrelations}
 \alias{processCorrelations}
-\title{Process correlation results}
+\title{Filter, annotate, and assign directionality to significant peak–gene correlations}
 \usage{
 processCorrelations(
   count_mat,
@@ -13,6 +13,63 @@ processCorrelations(
   BH_thresh = 0.05
 )
 }
+\arguments{
+\item{count_mat}{The combined count matrix from \code{\link[=formatMatrixForCorrelation]{formatMatrixForCorrelation()}}.}
+
+\item{cor_res}{The full correlation results data frame from
+\code{\link[=correlateByChromosome]{correlateByChromosome()}} (all tested pairs, not pre-filtered).}
+
+\item{correlation_pairs}{The \code{correlation_pairs} data frame from
+\code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}}. Currently unused in the function body but
+retained for potential downstream use.}
+
+\item{p2g_info}{The \code{p2g_info} data frame from \code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}},
+used to join \code{dist_to_tss} onto results.}
+
+\item{gene_inclusion_thresh}{FDR threshold used to determine which genes
+are included in further processing: a gene must have at least one
+peak-to-gene link (any link ending in \verb{_to_gene}) with BH below this
+threshold. Default: \code{0.05}.}
+
+\item{BH_thresh}{FDR threshold used for significance within the annotation
+and directional assignment steps. Default: \code{0.05}.}
+}
+\value{
+A data frame filtered to BH-significant links for genes with at
+least one significant peak-to-gene correlation. Contains all columns from
+\code{\link[=correlateByChromosome]{correlateByChromosome()}} plus the following:
+\describe{
+\item{\code{dist_to_tss}}{Signed distance (bp) from the regulatory element
+to the gene TSS, joined from \code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}}. Negative =
+upstream, positive = downstream (strand-aware; see
+\code{\link[=calculateDirectedDistance]{calculateDirectedDistance()}}).}
+\item{\code{prom_peak_sig_cor_w_gene}}{Logical. \code{TRUE} if the promoter peak
+involved in this link has a significant (\code{BH < BH_thresh})
+\code{promoter_peak_to_gene} correlation for this gene. Also \code{TRUE} for
+distal peaks significantly correlated with both the gene and such a
+promoter peak, indicating the full distal → promoter → gene chain is
+supported. Set by \code{\link[=categorizeAndAnnotateCorrelationResults]{categorizeAndAnnotateCorrelationResults()}}.}
+\item{\code{distal_no_promoter}}{Logical. \code{TRUE} for distal peaks that are
+significantly correlated with both the gene and a promoter peak, but
+whose associated promoter peak is itself not significantly correlated
+with gene expression. These links lack a supported promoter anchor.
+Set by \code{\link[=categorizeAndAnnotateCorrelationResults]{categorizeAndAnnotateCorrelationResults()}}.}
+\item{\code{region2gene_dir}}{Consensus direction of the peak's association
+with gene expression: \code{"pos"} (positive), \code{"neg"} (negative), or
+\code{"drop"} (direction could not be resolved). Assigned by
+\code{\link[=assignRegion2GeneDirection]{assignRegion2GeneDirection()}}.}
+\item{\code{region2gene_conf}}{Numeric confidence tier (1–4+) from
+\code{\link[=assignRegion2GeneDirection]{assignRegion2GeneDirection()}}. Tiers 1–3 reflect decreasing
+evidentiary strength from FDR-significant agreement down to nominal
+p-value arbitration. Tier 4+ links required iterative correlation
+with other distal peaks to infer direction and are generally excluded
+from downstream motif analyses.}
+}
+}
 \description{
-Genes with a significant correlation with either a promoter or distal peak are retained and focused on further.
+Orchestrates the post-correlation processing pipeline: retains genes with
+at least one significant peak-to-gene link, annotates the full regulatory
+chain context for each link via \code{\link[=categorizeAndAnnotateCorrelationResults]{categorizeAndAnnotateCorrelationResults()}},
+and assigns a directional sign and confidence tier to every link via
+\code{\link[=assignRegion2GeneDirection]{assignRegion2GeneDirection()}}.
 }

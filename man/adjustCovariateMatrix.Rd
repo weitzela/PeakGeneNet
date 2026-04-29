@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataSetup.R
 \name{adjustCovariateMatrix}
 \alias{adjustCovariateMatrix}
-\title{Use of matrix functions to adjust data via linear model}
+\title{Adjust a count matrix for covariates while protecting contrasts of interest}
 \usage{
 adjustCovariateMatrix(
   counts,
@@ -12,17 +12,38 @@ adjustCovariateMatrix(
 )
 }
 \arguments{
-\item{counts}{matrix of transformed counts (vst, log, inverse rank normalized, etc.). Should have sample IDs as rownames, feature ID as colnames}
+\item{counts}{A numeric matrix of transformed counts (VST, log, inverse
+rank normalised, etc.) with sample IDs as row names and feature IDs as
+column names.}
 
-\item{covariate_df}{dataframe with all covariates, sample names should be rownames. should be in the same order as the input matrix}
+\item{covariate_df}{A data frame with all covariates, including both the
+contrast variable(s) and variables to be regressed out. Row names must be
+sample IDs in the same order as \code{counts}.}
 
-\item{vars_to_protect}{character vector of column names that should be protected. the coefficients calculated for these variables will not be subtracted from the returned values}
+\item{vars_to_protect}{A character vector of column names in \code{covariate_df}
+whose coefficients should \strong{not} be subtracted (i.e. the biological
+contrasts to preserve). All other variables have their effects removed.
+Pass \code{""} if no variables should be protected.}
 
-\item{return_coefficients}{logcal. default=FALSE}
+\item{return_coefficients}{Logical. If \code{TRUE}, the full coefficient matrix
+from \code{lm.fit()} is attached to the result as an attribute named
+\code{"coefficients"}. Default: \code{FALSE}.}
 }
 \value{
-matrix of adjusted counts
+A numeric matrix of adjusted counts with the same dimensions as
+\code{counts}. If \code{return_coefficients = TRUE}, the matrix has a
+\code{"coefficients"} attribute containing the fitted coefficients.
 }
 \description{
-This is a wrapper function that adjusts for multiple additional experimental variables while protecting the contrast(s) of interest.
+Fits a linear model across all features simultaneously and subtracts the
+contribution of technical variables, leaving the biological contrast(s) of
+interest intact. This is the recommended preprocessing step before
+computing correlations with \code{\link[=correlateByChromosome]{correlateByChromosome()}}.
+}
+\details{
+Correlations in PeakGeneNet are computed on covariate-adjusted matrices,
+not raw counts. Adjustment removes unwanted variation (batch, sex, etc.)
+while preserving the contrast under study. VST-transformed counts are the
+expected input for RNA-seq data; peak modalities should be similarly
+variance-stabilised before input.
 }

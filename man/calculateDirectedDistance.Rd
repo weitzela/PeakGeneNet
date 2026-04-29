@@ -2,17 +2,31 @@
 % Please edit documentation in R/dataSetup.R
 \name{calculateDirectedDistance}
 \alias{calculateDirectedDistance}
-\title{Genomic distance with the direction}
+\title{Signed genomic distance relative to a reference feature}
 \usage{
 calculateDirectedDistance(subject, target)
 }
+\arguments{
+\item{subject}{A \code{GRanges} object representing the feature whose position is
+being evaluated (e.g., a peak).}
+
+\item{target}{A \code{GRanges} object representing the reference feature
+(e.g., a gene TSS). Must be the same length as \code{subject}.}
+}
 \value{
-A numeric vector of signed distances
+A numeric vector of signed distances, the same length as \code{subject}.
+Negative values indicate that the subject is upstream of the target TSS;
+positive values indicate downstream.
 }
 \description{
-This function assigns a negative value if the subject is upstream from the target and positive value if the subject is downstream from the target, while taking into account if the gene is located on the negative or positive strand. This function is created because the GenomicRanges::distance function itself will not account for direction from TSS (upstream (-) or downstream (+)).
+Computes the distance between \code{subject} and \code{target} genomic ranges and
+returns a signed value: \strong{negative} if \code{subject} is upstream of \code{target},
+\strong{positive} if downstream. Strand is taken into account — for genes on the
+minus strand, upstream corresponds to higher genomic coordinates.
 }
-\examples{
-# example code
+\details{
+This is used in place of \code{GenomicRanges::distance()}, which returns only
+unsigned distances, because peak-to-TSS interpretation requires knowing
+whether a peak lies upstream or downstream. The \code{dist_to_tss} column in
+\code{p2g_info} is populated using this function.
 }
-\keyword{internal}

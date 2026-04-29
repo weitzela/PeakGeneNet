@@ -2,16 +2,30 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{editCorResFields}
 \alias{editCorResFields}
-\title{Annotation of significant promoter peak information}
+\title{Annotate whether each link's associated promoter peak is significantly correlated with its gene}
 \usage{
 editCorResFields(df, BH_thresh = 0.05)
 }
 \arguments{
-\item{df}{the correlation results}
+\item{df}{A correlation results data frame containing columns
+\code{ensembl_gene_id}, \code{regulatory_element}, \code{target_id}, \code{link_label}, and
+\code{BH}.}
+
+\item{BH_thresh}{FDR threshold used to determine whether a
+\code{promoter_peak_to_gene} link is significant. Default: \code{0.05}.}
 }
 \value{
-an annotated dataframe
+\code{df} with an additional logical column \code{prom_peak_sig_cor_w_gene}.
 }
 \description{
-Annotation of significant promoter peak information
+Adds a \code{prom_peak_sig_cor_w_gene} column to \code{df}. The flag indicates
+whether the promoter peak involved in a given link has a significant
+\code{promoter_peak_to_gene} correlation (BH < \code{BH_thresh}) \emph{within the same
+input data frame}. This is used in two ways downstream:
+(1) on the BH-filtered results to identify \code{distal_peak_to_promoter_peak}
+links where the promoter anchor is also significantly connected to gene
+expression, supporting the full distal → promoter → gene chain; and
+(2) on the broader significant-gene set to identify cases where a
+distal→promoter link exists but the promoter peak itself is NOT
+significantly correlated with the gene (\code{distal_no_promoter} annotation).
 }

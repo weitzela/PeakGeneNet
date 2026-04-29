@@ -2,27 +2,55 @@
 % Please edit documentation in R/correlationAnalysis.R
 \name{correlateByChromosome}
 \alias{correlateByChromosome}
-\title{A wrapper function to carry out correlations in smaller chunks to help save on memory}
+\title{Run Spearman correlations for all peak–gene pairs, chromosome by chromosome}
 \usage{
-correlateByChromosome(
-  count_mat,
-  correlation_pairs,
-  grp_contrast = NULL,
-  rds_fn = NULL
-)
+correlateByChromosome(count_mat, correlation_pairs, rds_fn = NULL)
 }
 \arguments{
-\item{count_mat}{numeric matrix with features as columns and samples as rows}
+\item{count_mat}{Numeric matrix returned by \code{\link[=formatMatrixForCorrelation]{formatMatrixForCorrelation()}}:
+samples as rows, modality-suffixed feature IDs as columns.}
 
-\item{correlation_pairs}{dataframe supplying all pairs of features}
+\item{correlation_pairs}{Data frame returned by \code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}}:
+must have columns \code{ensembl_gene_id}, \code{regulatory_element}, \code{target_id},
+\code{link_label}, \code{chr}, and \code{modality_pair}.}
 
-\item{grp_contrast}{a way to filter to include samples from only certain groups}
-
-\item{rds_fn}{filename to save the output to for future access}
+\item{rds_fn}{Optional file path. If provided, the raw correlation results
+(before joining back to \code{correlation_pairs}) are saved with \code{saveRDS()}
+for later retrieval. Default: \code{NULL}.}
 }
 \value{
-a dataframe of full results
+A data frame with one row per \code{regulatory_element}–\code{target_id} pair
+per gene. Columns:
+\describe{
+\item{\code{ensembl_gene_id}}{Ensembl gene ID for the gene this link belongs
+to.}
+\item{\code{regulatory_element}}{Unique peak ID (\code{unique_id} from
+\code{\link[=createPeak2GeneObjects]{createPeak2GeneObjects()}}) of the peak acting as the regulatory
+element.}
+\item{\code{target_id}}{ID of the correlation target: either a peak
+\code{unique_id} (for peak–peak links) or an Ensembl gene ID suffixed with
+\code{"_RNASeq"} (for peak–gene links).}
+\item{\code{link_label}}{Factor indicating the link type. One of
+\code{"promoter_peak_to_gene"}, \code{"distal_peak_to_gene"},
+\code{"distal_peak_to_promoter_peak"}, \code{"promoter_peak_to_promoter_peak"}.}
+\item{\code{chr}}{Chromosome of the gene TSS.}
+\item{\code{modality_pair}}{Factor. Hyphen-separated modality labels for the
+regulatory element and target, alphabetically ordered
+(e.g. \code{"ATACSeq-RNASeq"}). Used to define the multiple-testing
+correction groups.}
+\item{\code{r}}{Spearman correlation coefficient.}
+\item{\code{n}}{Number of sample pairs used in the correlation (non-missing
+observations).}
+\item{\code{P}}{Nominal (unadjusted) p-value.}
+\item{\code{BH}}{FDR-adjusted p-value (Benjamini–Hochberg), corrected within
+each \code{link_label}–\code{modality_pair} group.}
+}
 }
 \description{
-A wrapper function to carry out correlations in smaller chunks to help save on memory
+Iterates over chromosomes, correlating each \code{regulatory_element}–\code{target_id}
+pair in \code{correlation_pairs} using \code{\link[=matrixCorrelation]{matrixCorrelation()}}. Large chromosomes
+are processed in chunks of 2 million pairs to limit peak memory use. After
+all correlations are computed, BH-adjusted p-values are calculated within
+groups defined by \code{link_label} × \code{modality_pair} — these groups define the
+exchangeable family for multiple testing correction.
 }
