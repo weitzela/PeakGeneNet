@@ -23,7 +23,7 @@ sample IDs in the same order as \code{counts}.}
 \item{vars_to_protect}{A character vector of column names in \code{covariate_df}
 whose coefficients should \strong{not} be subtracted (i.e. the biological
 contrasts to preserve). All other variables have their effects removed.
-Pass \code{""} if no variables should be protected.}
+Pass \code{NULL} if no variables should be protected.}
 
 \item{return_coefficients}{Logical. If \code{TRUE}, the full coefficient matrix
 from \code{lm.fit()} is attached to the result as an attribute named

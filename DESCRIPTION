@@ -22,8 +22,7 @@ Description: Links epigenomic peaks to gene expression through empirical
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.3
-Imports: 
+Imports:
     tictoc,
     GenomeInfoDb,
     biomaRt,
@@ -31,6 +30,7 @@ Imports:
     limma,
     matrixStats,
     GenomicRanges,
+    IRanges,
     GenomicFeatures,
     gtools,
     dplyr,
@@ -39,7 +39,12 @@ Imports:
     rlang,
     stringr,
     magrittr,
-    tibble
+    tibble,
+    ggplot2,
+    ggforce,
+    ggtext,
+    scales,
+    colorspace
 URL: https://weitzela.github.io/PeakGeneNet/
 Depends: 
     R (>= 3.5)
@@ -50,3 +55,4 @@ Suggests:
     janitor
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0

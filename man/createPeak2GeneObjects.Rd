@@ -68,9 +68,12 @@ parameters need adjustment.}
 \value{
 A named list with four elements and a \code{stats} attribute:
 \describe{
-\item{\code{gene_gr}}{\code{GRanges} of TSS and promoter window entries for all
-queried genes (output of \code{\link[=createTSSGr]{createTSSGr()}}). Used internally for overlap
-detection; useful for visualisation.}
+\item{\code{gene_gr}}{\code{GRanges} of TSS, promoter window, and gene body
+entries for all queried genes (output of \code{\link[=createTSSGr]{createTSSGr()}}),
+distinguished by the \code{annotation} metadata column. TSS and Promoter
+entries are used internally for overlap detection; GeneBody entries
+(spanning the canonical transcript) are intended for visualisation
+(e.g. \code{\link[=plotGeneLinks]{plotGeneLinks()}}).}
 \item{\code{peak_gr}}{\code{GRanges} of all input peaks across all modalities
 (output of \code{\link[=createPeakGr]{createPeakGr()}}). The \code{promoter_peak} metadata column
 indicates whether each peak overlaps any gene's promoter window.}
