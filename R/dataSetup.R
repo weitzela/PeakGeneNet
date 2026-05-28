@@ -48,9 +48,13 @@ calculateDirectedDistance = function(subject, target) {
 #' @param promoter_downstream Number of bases downstream of the TSS to include
 #'   in the promoter window. Default: `1000`.
 #'
-#' @return A sorted `GRanges` object with one TSS entry and one Promoter entry
-#'   per gene. Metadata columns: `ensembl_gene_id`, `annotation` (`"TSS"` or
-#'   `"Promoter"`). Names are set to `ensembl_gene_id` for TSS entries.
+#' @return A sorted `GRanges` object with one TSS entry, one Promoter entry,
+#'   and one GeneBody entry per gene. Metadata columns: `ensembl_gene_id`,
+#'   `annotation` (`"TSS"`, `"Promoter"`, or `"GeneBody"`). TSS entries are
+#'   point-width (start == end), Promoter entries span the promoter window,
+#'   and GeneBody entries span the canonical transcript (from
+#'   `transcript_start` to `transcript_end`). Names are set to
+#'   `ensembl_gene_id` for TSS, Promoter, and GeneBody entries.
 #' @examples
 #' # createTSSObject(c("ENSR00129", "ENSR00139"), biomaRt::useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl", version = 105), "hg38")
 #' @keywords internal
@@ -67,26 +71,38 @@ createTSSGr = function(ensembl_ids, biomart_ensembl, ucsc_genome,
   stopifnot(inherits(ensembl_ids, "character"))
   ensembl_ids = unique(ensembl_ids)
     
-  gene_gr = biomaRt::getBM(attributes = c("transcription_start_site", "transcript_is_canonical", "ensembl_gene_id", "chromosome_name", "strand"), filters = "ensembl_gene_id", values = ensembl_ids, mart = biomart_ensembl) |> 
-    dplyr::rename("start" = "transcription_start_site", "chr" = "chromosome_name") |> 
-    dplyr::mutate(end = start) |> 
-    tidyr::drop_na(transcript_is_canonical) |> #remove TSS associated with any non-canonical transcripts
-    dplyr::select(-transcript_is_canonical) |> 
-    dplyr::filter(chr %in% as.character(1:22)) |> 
-    dplyr::mutate(strand = ifelse(strand == 1, "+", "-"),
-           annotation = "TSS") |> 
-    GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = TRUE) |> 
-    GenomicRanges::sort(ignore.strand = TRUE) |> 
+  biomart_df = biomaRt::getBM(attributes = c("transcription_start_site", "transcript_is_canonical", "ensembl_gene_id", "chromosome_name", "strand", "transcript_start", "transcript_end"), filters = "ensembl_gene_id", values = ensembl_ids, mart = biomart_ensembl) |>
+    dplyr::rename("chr" = "chromosome_name") |>
+    tidyr::drop_na(transcript_is_canonical) |> #remove transcripts that aren't canonical
+    dplyr::select(-transcript_is_canonical) |>
+    dplyr::filter(chr %in% as.character(1:22)) |>
+    dplyr::mutate(strand = ifelse(strand == 1, "+", "-"))
+
+  gene_gr = biomart_df |>
+    dplyr::mutate(start = transcription_start_site, end = transcription_start_site, annotation = "TSS") |>
+    dplyr::select(chr, start, end, strand, ensembl_gene_id, annotation) |>
+    GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = TRUE) |>
+    GenomicRanges::sort(ignore.strand = TRUE) |>
     GenomeInfoDb::`seqlevelsStyle<-`("UCSC")
   names(gene_gr) = gene_gr$ensembl_gene_id
   GenomeInfoDb::genome(gene_gr) = ucsc_genome
   GenomeInfoDb::seqinfo(gene_gr) = GenomeInfoDb::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(gene_gr)) |> unique(),]
-  
-  promoter_gr = gene_gr |> 
+
+  promoter_gr = gene_gr |>
     IRanges::promoters(upstream = promoter_upstream, downstream = promoter_downstream)
   promoter_gr$annotation = "Promoter"
-  
-  gene_gr = c(gene_gr, promoter_gr) |> 
+
+  gene_body_gr = biomart_df |>
+    dplyr::mutate(start = transcript_start, end = transcript_end, annotation = "GeneBody") |>
+    dplyr::select(chr, start, end, strand, ensembl_gene_id, annotation) |>
+    GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = TRUE) |>
+    GenomicRanges::sort(ignore.strand = TRUE) |>
+    GenomeInfoDb::`seqlevelsStyle<-`("UCSC")
+  names(gene_body_gr) = gene_body_gr$ensembl_gene_id
+  GenomeInfoDb::genome(gene_body_gr) = ucsc_genome
+  GenomeInfoDb::seqinfo(gene_body_gr) = GenomeInfoDb::Seqinfo(genome = ucsc_genome)[as.character(GenomicRanges::seqnames(gene_body_gr)) |> unique(),]
+
+  gene_gr = c(gene_gr, promoter_gr, gene_body_gr) |>
     GenomicRanges::sort(ignore.strand = TRUE)
   return(gene_gr)
 }
@@ -203,9 +219,12 @@ createPeakGr = function(peaks, ucsc_genome) {
 #'
 #' @return A named list with four elements and a `stats` attribute:
 #'   \describe{
-#'     \item{`gene_gr`}{`GRanges` of TSS and promoter window entries for all
-#'       queried genes (output of [createTSSGr()]). Used internally for overlap
-#'       detection; useful for visualisation.}
+#'     \item{`gene_gr`}{`GRanges` of TSS, promoter window, and gene body
+#'       entries for all queried genes (output of [createTSSGr()]),
+#'       distinguished by the `annotation` metadata column. TSS and Promoter
+#'       entries are used internally for overlap detection; GeneBody entries
+#'       (spanning the canonical transcript) are intended for visualisation
+#'       (e.g. [plotGeneLinks()]).}
 #'     \item{`peak_gr`}{`GRanges` of all input peaks across all modalities
 #'       (output of [createPeakGr()]). The `promoter_peak` metadata column
 #'       indicates whether each peak overlaps any gene's promoter window.}
@@ -308,7 +327,7 @@ createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome,
         ) |>
           dplyr::mutate(dplyr::across(dplyr::everything(), as.character)) |>
           dplyr::filter(!(as.character(Var1) == Var2)) |>
-          dplyr::mutate(link_label = ifelse(
+          dplyr::mutate(link_label = dplyr::if_else(
             Var1 %in% promoter_peaks,
             "promoter_peak_to_promoter_peak",
             "distal_peak_to_promoter_peak"
@@ -419,7 +438,7 @@ createPeak2GeneObjects = function(genes, peaks, biomart_ensembl, ucsc_genome,
 #' @param vars_to_protect A character vector of column names in `covariate_df`
 #'   whose coefficients should **not** be subtracted (i.e. the biological
 #'   contrasts to preserve). All other variables have their effects removed.
-#'   Pass `""` if no variables should be protected.
+#'   Pass `NULL` if no variables should be protected.
 #' @param return_coefficients Logical. If `TRUE`, the full coefficient matrix
 #'   from `lm.fit()` is attached to the result as an attribute named
 #'   `"coefficients"`. Default: `FALSE`.
@@ -436,6 +455,7 @@ adjustCovariateMatrix = function(counts, covariate_df, vars_to_protect, return_c
   coefficients = lm.fit(model_matrix, counts)$coefficients
   coefficients_sums = (model_matrix %>% .[,-grep(vars_to_disclude_from_adj, colnames(.), ignore.case = TRUE),drop = FALSE]) %*% (coefficients %>% .[-grep(vars_to_disclude_from_adj, rownames(.), ignore.case = TRUE),,drop = FALSE])
   adj_counts = counts - coefficients_sums
+  if (identical(adj_counts, counts)) warning("Adjustment did not take place.")
   if (return_coefficients) {
     adj_counts = adj_counts %>% 
       `attr<-`("coefficients", coefficients)

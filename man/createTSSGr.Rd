@@ -31,9 +31,13 @@ the promoter window. Default: \code{2000}.}
 in the promoter window. Default: \code{1000}.}
 }
 \value{
-A sorted \code{GRanges} object with one TSS entry and one Promoter entry
-per gene. Metadata columns: \code{ensembl_gene_id}, \code{annotation} (\code{"TSS"} or
-\code{"Promoter"}). Names are set to \code{ensembl_gene_id} for TSS entries.
+A sorted \code{GRanges} object with one TSS entry, one Promoter entry,
+and one GeneBody entry per gene. Metadata columns: \code{ensembl_gene_id},
+\code{annotation} (\code{"TSS"}, \code{"Promoter"}, or \code{"GeneBody"}). TSS entries are
+point-width (start == end), Promoter entries span the promoter window,
+and GeneBody entries span the canonical transcript (from
+\code{transcript_start} to \code{transcript_end}). Names are set to
+\code{ensembl_gene_id} for TSS, Promoter, and GeneBody entries.
 }
 \description{
 Queries Ensembl via \code{biomaRt} for the canonical TSS of each requested gene
